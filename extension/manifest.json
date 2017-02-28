@@ -2,28 +2,34 @@
 
     "manifest_version": 2,
     "name": "Syncmark",
-    "version": "0.1",
+    "version": "1.0",
 
     "description": "扩展书签在浏览器间同步的功能",
 
     "applications": {
         "gecko": {
-        "id": "syncmark@trto1987.com",
-        "strict_min_version": "45"
+            "id": "syncmark@trto1987.com",
+            "strict_min_version": "45"
         }
+    },
+    "icons": {
+        "48": "icons/syncmark-48.png",
+        "96": "icons/syncmark-96.png"
     },
 
     "background": {
         "scripts": ["background.js"]
     },
 
+    // 权限
     "permissions": [
-        "bookmarks"
+        "bookmarks", //书签
+        "tabs" //页面
     ],
-
     "browser_action": {
         "default_icon": "icons/star-empty-38.png",
-        "default_title": "test"
+        "default_title": "syncmark",
+        "browser_style": true,
+        "default_popup": "popup/bookmark.html"
     }
-
 }
