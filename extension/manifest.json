@@ -18,7 +18,7 @@
     },
 
     "background": {
-        "scripts": ["background.js"]
+        "scripts": ["background.js", "syncup.js"]
     },
 
     // 权限

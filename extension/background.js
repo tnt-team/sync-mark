@@ -1,30 +1,41 @@
-// chrome.bookmarks.getTree(function(bookmarkItems) {
-//     $.ajax({
-//         url: '127.0.0.1:5000/test',
-//         type: 'post',
-//         data: {
-//             'items': JSON.stringify(bookmarkItems)
-//         }
-//     })
-// });
 
-// chrome.commands.onCommand.addListener(function(command) {
-//     console.log('commands');
-//     if (command === 'bookmarks') {
-//         chrome.bookmarks.getTree(function(bookmarkItems) {
-//             console.log(bookmarkItems);
-//         });
-//     }
-// });
+// var DELAY = 5000;
 
-function debugBookmark() {
-    console.log('debugBookmark');
-    if (command === 'bookmarks') {
-        chrome.bookmarks.getTree(function(bookmarkItems) {
-            console.log(bookmarkItems);
-        });
-    }
+// function debugBookmark() {
+//     chrome.bookmarks.getTree((bookmarkItems) => {
+//         console.log(bookmarkItems);
+//     });
+// }
+
+// window.setInterval(debugBookmark, DELAY);
+
+
+function makeIndent(indentLength) {
+  return ".".repeat(indentLength);
 }
 
-chrome.browserAction.onClicked.addListener(debugBookmark);
+function logItems(bookmarkItem, indent) {
+  if (bookmarkItem.url) {
+    console.log(makeIndent(indent) + bookmarkItem.url);
+  } else {
+    console.log(makeIndent(indent) + "Folder");
+    indent++;
+  }
+  if (bookmarkItem.children) {
+    for (child of bookmarkItem.children) {
+      logItems(child, indent);
+    }
+  }
+  indent--;
+}
 
+function logTree(bookmarkItems) {
+  logItems(bookmarkItems[0], 0);
+}
+
+function onRejected(error) {
+  console.log(`An error: ${error}`);
+}
+
+var gettingTree = browser.bookmarks.getTree();
+gettingTree.then(logTree, onRejected);
