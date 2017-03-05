@@ -27,3 +27,4 @@ function debugBookmark() {
 }
 
 chrome.browserAction.onClicked.addListener(debugBookmark);
+
