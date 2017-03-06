@@ -1,30 +1,20 @@
-// chrome.bookmarks.getTree(function(bookmarkItems) {
-//     $.ajax({
-//         url: '127.0.0.1:5000/test',
-//         type: 'post',
-//         data: {
-//             'items': JSON.stringify(bookmarkItems)
-//         }
-//     })
-// });
+//创建定时任务
+browser.alarms.create('sync', {
+    periodInMinutes: 0.1
+});
 
-// chrome.commands.onCommand.addListener(function(command) {
-//     console.log('commands');
-//     if (command === 'bookmarks') {
-//         chrome.bookmarks.getTree(function(bookmarkItems) {
-//             console.log(bookmarkItems);
-//         });
-//     }
-// });
+browser.alarms.onAlarm.addListener(function() {
 
-function debugBookmark() {
-    console.log('debugBookmark');
-    if (command === 'bookmarks') {
-        chrome.bookmarks.getTree(function(bookmarkItems) {
-            console.log(bookmarkItems);
-        });
-    }
-}
-
-chrome.browserAction.onClicked.addListener(debugBookmark);
-
+    $.ajax({
+        url: 'http://localhost:3000/marks/getAll/1',
+        type: 'get',
+        data: {},
+        success: function(data) {
+            console.log('success:' + data);
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            console.log('请求失败:' + JSON.stringify(XMLHttpRequest));
+            console.log(textStatus);
+        }
+    });
+});

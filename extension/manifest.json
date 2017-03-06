@@ -18,13 +18,16 @@
     },
 
     "background": {
-        "scripts": ["background.js"]
+        "scripts": ["jquery.min.js", "background.js"]
     },
 
     // 权限
     "permissions": [
         "bookmarks", //书签
-        "tabs" //页面
+        "tabs", //页面
+        "alarms",
+        "http://localhost:3000/*",
+        "webRequest"
     ],
     "browser_action": {
         "default_icon": "icons/star-empty-38.png",
