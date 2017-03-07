@@ -1,22 +1,11 @@
-//创建定时任务
-browser.alarms.create('sync', {
-    periodInMinutes: 0.1
-});
+var SYNC_DOWN_DELAY = 0.1;
+var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
+var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
 
-browser.alarms.onAlarm.addListener(function() {
-    $.ajax({
-        url: 'http://localhost:3000/marks/getAll/1',
-        type: 'get',
-        data: {},
-        success: function(data) {
-            console.log('success:' + data);
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-            console.log('请求失败:' + JSON.stringify(XMLHttpRequest));
-            console.log(textStatus);
-        }
-    });
-});
+var REMOTE_HOST = 'http://localhost:3000'; //测试本地模拟远程服务器
+
+
+
 
 
 function makeIndent(indentLength) {
