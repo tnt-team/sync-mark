@@ -3,8 +3,8 @@ localStorage.setItem(SYNC_MARK_VERSION, 0); //模拟版本号
 
 //创建定时任务
 browser.alarms.create('sync', {
-    periodInMinutes: SYNC_DOWN_DELAY
-        // delayInMinutesOptional: SYNC_DOWN_DELAY
+    // periodInMinutes: SYNC_DOWN_DELAY
+    delayInMinutes: SYNC_DOWN_DELAY
 });
 
 
@@ -32,8 +32,14 @@ browser.alarms.onAlarm.addListener(function() {
             }
             if (curVersion > version) { //服务器的版本较新
                 var data = downData(userid); //服务器数据
-                // var localData = 
-
+                getAllMarks(function(err, items) {
+                    if (err) {
+                        console.log('获取本地书签错误');
+                        return;
+                    }
+                    console.log('本地书签：')
+                    console.log(JSON.stringify(items[0].children[1]));
+                });
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
