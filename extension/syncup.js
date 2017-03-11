@@ -50,6 +50,7 @@ function SyncUpQueue(fn) {
       outputArr = that._syncUpDataArr;
       that._syncUpDataArr = [];
       fn(outputArr);
+      delayCall = undefined;
     }
     setTimeout(delayCall, QUEUE_DELAY);
   }
@@ -64,6 +65,7 @@ function SyncUpQueue(fn) {
     }
   }
   this.startSyncUp = function() {
+    if (delayCall) return;
     makeDelayCall();
   }
 }
@@ -85,50 +87,61 @@ var syncUpReq = function(syncUpItemArr) {
     }
   });
 }
+var syncUpQueue = new syncUpQueue(syncUpReq);
 var syncUpWorker = {
-
+  addSyncUp: function(type, id, data) {
+    syncUpQueue.addSyncUp(new SyncUpItem(type, id, data));
+    syncUpQueue.startSyncUp();
+  }
 }
 
-// console.log(CONFIG.host);
-console.log('syncup');
-var isImport = false;
+// var isImport = false;
 
 browser.bookmarks.onCreated.addListener((id, bookmark) => {
   console.log('bookmarks.onCreated');
-  // console.log(id);
-  // console.log(bookmark);
+  console.log(id);
+  console.log(bookmark);
+  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.create, id, bookmark);
 });
 
 browser.bookmarks.onRemoved.addListener((id, removeInfo) => {
   console.log('bookmarks.onRemoved');
   console.log(id);
   console.log(removeInfo);
+
+  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.remove, id, removeInfo);
 });
 
 browser.bookmarks.onChanged.addListener((id, changeInfo) => {
   console.log('bookmarks.onChanged');
   console.log(id);
   console.log(changeInfo);
+
+  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.change, id, changeInfo);
 });
 
 browser.bookmarks.onMoved.addListener((id, moveInfo) => {
   console.log('bookmarks.onMoved');
   console.log(id);
   console.log(moveInfo);
+
+  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.move, id, moveInfo);
 });
 
 browser.bookmarks.onChildrenReordered.addListener((id, reorderInfo) => {
   console.log('bookmarks.onChildrenReordered');
   console.log(id);
   console.log(reorderInfo);
+
+  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.reorder, id, reorderInfo);
 });
 
-browser.bookmarks.onImportBegan.addListener(() => {
-  console.log('bookmarks.onImportBegan');
-  isImport = true;
-});
+// browser.bookmarks.onImportBegan.addListener(() => {
+//   console.log('bookmarks.onImportBegan');
+//   isImport = true;
+// });
 
-browser.bookmarks.onImportEnded.addListener(() => {
-  console.log('bookmarks.onImportEnded');
-  isImport = false;
-});
+// browser.bookmarks.onImportEnded.addListener(() => {
+//   console.log('bookmarks.onImportEnded');
+//   isImport = false;
+// });
