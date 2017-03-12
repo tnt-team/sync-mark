@@ -18,7 +18,7 @@
     },
 
     "background": {
-        "scripts": ["jquery.min.js", "background.js", "utils.js", "syncup.js", "syncdown.js"]
+        "scripts": ["jquery.min.js", "config.js", "utils.js", "background.js", "syncup.js", "syncdown.js"]
     },
 
     // 权限

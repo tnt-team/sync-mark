@@ -1,4 +1,3 @@
-// import CONFIG from './profile'
 QUEUE_DELAY = 500;
 
 SYNC_ITEM_TYPES = {
@@ -43,100 +42,110 @@ function SyncUpItem(type, id, data) {
 function SyncUpQueue(fn) {
   var that = this;
   var outputArr;
-  var delayCall;
+  var timeoutId;
+
+  function delayCall() {
+    console.log('delayCall: ');
+    outputArr = that._syncUpDataArr;
+    that._syncUpDataArr = [];
+    fn(outputArr);
+    timeoutId = undefined;
+  }
 
   function makeDelayCall() {
-    delayCall = function() {
-      outputArr = that._syncUpDataArr;
-      that._syncUpDataArr = [];
-      fn(outputArr);
-      delayCall = undefined;
-    }
-    setTimeout(delayCall, QUEUE_DELAY);
+    console.log('makeDelayCall: ');
+    timeoutId = setTimeout(delayCall, QUEUE_DELAY);
   }
 
   this._syncUpDataArr = [];
 
   this.addSyncUp = function(syncUpItem) {
+    console.log('addSyncUp: ' + syncUpItem.valueOf());
     that._syncUpDataArr.push(syncUpItem);
-    if (delayCall) {
-      clearTimeout(delayCall);
+    // console.log(delayCall);
+    if (timeoutId) {
+      console.log('removeDelayCall: ');
+      clearTimeout(timeoutId);
+      makeDelayCall();
+    } else {
       makeDelayCall();
     }
-  }
-  this.startSyncUp = function() {
-    if (delayCall) return;
-    makeDelayCall();
   }
 }
 
 var syncUpReq = function(syncUpItemArr) {
+  console.log('syncUpReq: ' + syncUpItemArr.valueOf());
   syncTaskQueue.addSyncTask(function(taskFinish) {
-    $.ajax({
-      url: '',
-      data: {changes: JSON.stringify(syncUpItemArr)},
-      dataType: "json",
-      error: function() {
-        // todo err
-        // todo requeue
-        taskFinish();
-      },
-      headers: { token: localStorage.token },
-      timeout: 30000,
-      type: 'POST',
-      success: function() {
-        // todo succ
-        taskFinish();
-      }
-    });
+    // $.ajax({
+    //   url: '',
+    //   data: {changes: JSON.stringify(syncUpItemArr)},
+    //   dataType: "json",
+    //   error: function() {
+    //     // todo err
+    //     // todo requeue
+    //     taskFinish();
+    //   },
+    //   headers: { token: localStorage.token },
+    //   timeout: 30000,
+    //   type: 'POST',
+    //   success: function() {
+    //     // todo succ
+    //     taskFinish();
+    //   }
+    // });
+    console.log('todo request');
   });
 }
-var syncUpQueue = new syncUpQueue(syncUpReq);
+var syncUpQueue = new SyncUpQueue(syncUpReq);
 var syncUpWorker = {
   addSyncUp: function(type, id, data) {
     syncUpQueue.addSyncUp(new SyncUpItem(type, id, data));
-    syncUpQueue.startSyncUp();
   }
 }
 
 // var isImport = false;
 
-browser.bookmarks.onCreated.addListener((id, bookmark) => {
-  console.log('bookmarks.onCreated');
-  console.log(id);
-  console.log(bookmark);
+browser.bookmarks.onCreated.addListener(function(id, bookmark) {
+  // console.log('bookmarks.onCreated');
+  // console.log(id);
+  // console.log(bookmark);
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.create, id, bookmark);
 });
 
-browser.bookmarks.onRemoved.addListener((id, removeInfo) => {
-  console.log('bookmarks.onRemoved');
-  console.log(id);
-  console.log(removeInfo);
+browser.bookmarks.onRemoved.addListener(function(id, removeInfo) {
+  // console.log('bookmarks.onRemoved');
+  // console.log(id);
+  // console.log(removeInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.remove, id, removeInfo);
 });
 
-browser.bookmarks.onChanged.addListener((id, changeInfo) => {
-  console.log('bookmarks.onChanged');
-  console.log(id);
-  console.log(changeInfo);
+browser.bookmarks.onChanged.addListener(function(id, changeInfo) {
+  // console.log('bookmarks.onChanged');
+  // console.log(id);
+  // console.log(changeInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.change, id, changeInfo);
 });
 
-browser.bookmarks.onMoved.addListener((id, moveInfo) => {
-  console.log('bookmarks.onMoved');
-  console.log(id);
-  console.log(moveInfo);
+browser.bookmarks.onMoved.addListener(function(id, moveInfo) {
+  // console.log('bookmarks.onMoved');
+  // console.log(id);
+  // console.log(moveInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.move, id, moveInfo);
 });
 
-browser.bookmarks.onChildrenReordered.addListener((id, reorderInfo) => {
-  console.log('bookmarks.onChildrenReordered');
-  console.log(id);
-  console.log(reorderInfo);
+browser.bookmarks.onChildrenReordered.addListener(function(id, reorderInfo) {
+  // console.log('bookmarks.onChildrenReordered');
+  // console.log(id);
+  // console.log(reorderInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.reorder, id, reorderInfo);
 });
 

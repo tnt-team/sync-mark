@@ -1,3 +1,9 @@
+var SYNC_DOWN_DELAY = 0.1;
+var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
+var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
+
+var REMOTE_HOST = 'http://localhost:3000'; //测试本地模拟远程服务器
+
 localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
 localStorage.setItem(SYNC_MARK_VERSION, 0); //模拟版本号
 
