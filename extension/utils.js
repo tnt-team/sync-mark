@@ -1,6 +1,6 @@
 /**
  * 获取所有书签
- * @param {*回调函数} callback 
+ * @param {*回调函数} callback,有2个参数，第一个为err,第二个为获取到的书签对象
  */
 function getAllMarks(callback) {
     var getItems = browser.bookmarks.getTree();
@@ -76,18 +76,58 @@ function getByIdOrArray(ids, callback) {
  * 将书签对象转为数组形式
  * @param {*书签对象} marksObject 
  */
-function parseMarkArray(marksObject) {
-    var marks = [];
-    var obj = marksObject[0];
+function parseMarks2Array(marksObject) {
+    var marks = [],
+        mark = {};
+    mark.id = marksObject.id;
+    mark.title = marksObject.title;
+    mark.index = marksObject.index;
+    mark.url = marksObject.url;
+    mark.parentId = marksObject.parentId;
+    if (marksObject.children) {
+        mark.type = 0;
+        marks.push(mark);
+        let num = marksObject.children.length;
+        for (let i = 0; i < num; i++) {
+            marks = marks.concat(parseMarkArray(marksObject.children[i]));
+        }
+        return marks;
+    } else {
+        mark.type = 1;
+        marks.push(mark);
+        return marks;
+    }
 
 }
 
-
-function obj2Array(obj) {
-    if (!obj.children) {
-
+/**
+ * 将书签对象（嵌套式）转为平行Map结构
+ * @param {*书签对象} marksObject 
+ */
+function parseMarks2Map(marksObject) {
+    var marks = {},
+        mark = {},
+        id = marksObject.id;
+    mark.title = marksObject.title;
+    mark.index = marksObject.index;
+    mark.url = marksObject.url;
+    mark.parentId = marksObject.parentId;
+    if (marksObject.children) {
+        mark.type = 0; //type为0表示文件夹
+        marks[id] = mark;
+        let num = marksObject.children.length;
+        for (let i = 0; i < num; i++) {
+            //对象合并
+            marks = Object.assign(marks, parseMarkArray(marksObject.children[i]));
+        }
+        return marks;
+    } else {
+        mark.type = 1; //type为1表示单个书签
+        marks[id] = mark;
+        return marks;
     }
 }
+
 
 /**
  * A queue of tasks.
