@@ -78,8 +78,16 @@ function getByIdOrArray(ids, callback) {
  */
 function parseMarkArray(marksObject) {
     var marks = [];
+    var obj = marksObject[0];
+
     
 
 
 
+}
+
+function obj2Array(obj){
+    if(!obj.children){
+        
+    }
 }

@@ -3,8 +3,8 @@ localStorage.setItem(SYNC_MARK_VERSION, 0); //模拟版本号
 
 //创建定时任务
 browser.alarms.create('sync', {
-    // periodInMinutes: SYNC_DOWN_DELAY
-    delayInMinutes: SYNC_DOWN_DELAY
+    periodInMinutes: SYNC_DOWN_DELAY
+        // delayInMinutes: SYNC_DOWN_DELAY
 });
 
 
@@ -24,8 +24,13 @@ browser.alarms.onAlarm.addListener(function() {
         type: 'get',
         data: { userid: userid },
         success: function(data) {
-            console.log(JSON.stringify(data));
+            if (data.error) {
+                console.error('获取版本号失败');
+                return;
+            }
             var curVersion = data.result[0].version;
+            console.log(JSON.stringify('result:' + JSON.stringify(curVersion)));
+
             if (!curVersion) {
                 console.error(curVersion);
                 //TODO 本地比服务器的新 待处理
@@ -57,6 +62,7 @@ function downData(userid) {
     console.error('开始下载数据');
     $.get(REMOTE_HOST + '/marks/getAll', { userid: userid }, function(data) {
         marksData = data.result;
+        console.log(marksData);
     });
     return marksData;
 }
