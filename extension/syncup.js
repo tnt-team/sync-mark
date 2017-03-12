@@ -36,9 +36,9 @@ function SyncUpItem(type, id, data) {
       break;
   }
 }
-SyncUpItem.prototype.valueOf = function() {
-  JSON.stringify(this);
-};
+// SyncUpItem.prototype.valueOf = function() {
+//   JSON.stringify(this);
+// };
 
 function SyncUpQueue(fn) {
   var that = this;
@@ -71,20 +71,24 @@ function SyncUpQueue(fn) {
 }
 
 var syncUpReq = function(syncUpItemArr) {
-  $.ajax({
-    url: '',
-    data: {changes: syncUpItemArr},
-    dataType: "json",
-    error: function() {
-      // todo err
-      // todo requeue
-    },
-    headers: { token: localStorage.token },
-    timeout: 30000,
-    type: 'POST',
-    success: function() {
-      // todo succ
-    }
+  syncTaskQueue.addSyncTask(function(taskFinish) {
+    $.ajax({
+      url: '',
+      data: {changes: JSON.stringify(syncUpItemArr)},
+      dataType: "json",
+      error: function() {
+        // todo err
+        // todo requeue
+        taskFinish();
+      },
+      headers: { token: localStorage.token },
+      timeout: 30000,
+      type: 'POST',
+      success: function() {
+        // todo succ
+        taskFinish();
+      }
+    });
   });
 }
 var syncUpQueue = new syncUpQueue(syncUpReq);
