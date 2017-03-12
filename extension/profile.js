@@ -1,5 +1,1 @@
-var host = '';
-
-export default {
-  host
-}
+var SERVER_HOST = '';

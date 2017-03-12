@@ -83,3 +83,42 @@ function parseMarkArray(marksObject) {
 
 
 }
+
+/**
+ * A queue of tasks.
+ * Put a task in queue by using syncTaskQueue.addSyncTask(taskfn);
+ * When turn on task run, a callback will be pass on it, do not forget to call the callback when task finish.
+ */
+var syncTaskQueue = +(function SyncTaskQueue() {
+  var taskArr;
+  var taskRunner;
+  var isTaskRunning = false;
+  var delay = 100;
+
+  function taskFinish() {
+    isTaskRunning = false;
+    if (taskArr.length === 0) {
+      clearInterval(taskRunner);
+      taskRunner = undefined;
+    }
+  };
+
+  function startTask() {
+      if (taskRunner) return;
+      taskRunner = function() {
+        if (isTaskRunning) return;
+        var task = taskArr.shift();
+        task(taskFinish);
+      }
+      setInterval(taskRunner, delay);
+  }
+
+  function addSyncTask(fn) {
+    taskArr.push(fn);
+    startTask();
+  }
+
+  return {
+    addSyncTask: addSyncTask
+  }
+})();
