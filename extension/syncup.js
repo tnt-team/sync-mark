@@ -109,38 +109,43 @@ browser.bookmarks.onCreated.addListener(function(id, bookmark) {
   // console.log('bookmarks.onCreated');
   // console.log(id);
   // console.log(bookmark);
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.create, id, bookmark);
 });
 
 browser.bookmarks.onRemoved.addListener(function(id, removeInfo) {
-  console.log('bookmarks.onRemoved');
-  console.log(id);
-  console.log(removeInfo);
+  // console.log('bookmarks.onRemoved');
+  // console.log(id);
+  // console.log(removeInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.remove, id, removeInfo);
 });
 
 browser.bookmarks.onChanged.addListener(function(id, changeInfo) {
-  console.log('bookmarks.onChanged');
-  console.log(id);
-  console.log(changeInfo);
+  // console.log('bookmarks.onChanged');
+  // console.log(id);
+  // console.log(changeInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.change, id, changeInfo);
 });
 
 browser.bookmarks.onMoved.addListener(function(id, moveInfo) {
-  console.log('bookmarks.onMoved');
-  console.log(id);
-  console.log(moveInfo);
+  // console.log('bookmarks.onMoved');
+  // console.log(id);
+  // console.log(moveInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.move, id, moveInfo);
 });
 
 browser.bookmarks.onChildrenReordered.addListener(function(id, reorderInfo) {
-  console.log('bookmarks.onChildrenReordered');
-  console.log(id);
-  console.log(reorderInfo);
+  // console.log('bookmarks.onChildrenReordered');
+  // console.log(id);
+  // console.log(reorderInfo);
 
+  if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.reorder, id, reorderInfo);
 });
 
