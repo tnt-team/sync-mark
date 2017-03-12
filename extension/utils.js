@@ -92,7 +92,7 @@ function obj2Array(obj) {
 /**
  * A queue of tasks.
  * Put a task in queue by using syncTaskQueue.addSyncTask(taskfn);
- * When turn on task run, a callback will be pass on it, do not forget to call the callback when task finish.
+ * When turn on task run, a callback will be passed on it, do not forget to call the callback when task was finish.
  */
 var syncTaskQueue = (function() {
     var taskArr = [];
@@ -129,5 +129,28 @@ var syncTaskQueue = (function() {
         addSyncTask: addSyncTask
     }
 })();
-console.log('syncTaskQueue');
-console.log(syncTaskQueue);
+// console.log('syncTaskQueue');
+// console.log(syncTaskQueue);
+
+/**
+ * a lock to protect bookmark sync in right way.
+ * use tryLock to get the lock, while use isLocked to get the lock state.
+ */
+var bookmarkLock = (function() {
+    var lockState = false;
+
+    function tryLock() {
+        if (lockState) return false;
+        lockState = true;
+        return true;
+    }
+
+    function isLocked() {
+        return lockState;
+    }
+
+    return {
+        tryLock: tryLock,
+        isLocked: isLocked
+    }
+})();
