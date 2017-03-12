@@ -94,28 +94,30 @@ function obj2Array(obj) {
  * Put a task in queue by using syncTaskQueue.addSyncTask(taskfn);
  * When turn on task run, a callback will be pass on it, do not forget to call the callback when task finish.
  */
-var syncTaskQueue = +(function SyncTaskQueue() {
-    var taskArr;
-    var taskRunner;
+var syncTaskQueue = (function() {
+    var taskArr = [];
     var isTaskRunning = false;
     var delay = 100;
+    var intervalId;
 
     function taskFinish() {
         isTaskRunning = false;
         if (taskArr.length === 0) {
-            clearInterval(taskRunner);
-            taskRunner = undefined;
+            clearInterval(intervalId);
+            intervalId = undefined;
         }
     };
 
+    function taskRunner() {
+        if (isTaskRunning) return;
+        var task = taskArr.shift();
+        isTaskRunning = true;
+        task(taskFinish);
+    }
+
     function startTask() {
-        if (taskRunner) return;
-        taskRunner = function() {
-            if (isTaskRunning) return;
-            var task = taskArr.shift();
-            task(taskFinish);
-        }
-        setInterval(taskRunner, delay);
+        if (intervalId) return;
+        intervalId = setInterval(taskRunner, delay);
     }
 
     function addSyncTask(fn) {
@@ -127,3 +129,5 @@ var syncTaskQueue = +(function SyncTaskQueue() {
         addSyncTask: addSyncTask
     }
 })();
+console.log('syncTaskQueue');
+console.log(syncTaskQueue);
