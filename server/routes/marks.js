@@ -12,6 +12,7 @@ router.get('/getAll', function(req, res) {
         }
         utils.result2json(res, data);
     });
+
 });
 
 module.exports = router;
