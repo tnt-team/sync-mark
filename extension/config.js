@@ -1,4 +1,4 @@
 // namespace
 var syncmark = {};
 
-syncmark.host = '';
+syncmark.remoteHost = 'http://localhost:3000';
