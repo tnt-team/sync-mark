@@ -106,9 +106,9 @@ var syncUpWorker = {
 // var isImport = false;
 
 browser.bookmarks.onCreated.addListener(function(id, bookmark) {
-  // console.log('bookmarks.onCreated');
-  // console.log(id);
-  // console.log(bookmark);
+  console.log('bookmarks.onCreated');
+  console.log(id);
+  console.log(bookmark);
   if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.create, id, bookmark);
 });

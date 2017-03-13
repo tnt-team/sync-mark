@@ -10,10 +10,15 @@ var pool = mysql.createPool({
 function execSQL(sql, callback) {
     pool.getConnection(function(err, conn) {
         if (err) {
+            console.error('execSQL: get connection error: ' + err.message || '' + ' '+ err.stack || '');
             return callback(err, null);
         }
         conn.query(sql, function(err, rows) {
+            // release the connection to pool
+            conn.release();
+
             if (err) {
+                console.error('execSQL: exec sql error, ' + err.message || '' + ' '+ err.stack || '');
                 callback(err, null);
             }
             callback(null, rows);
@@ -29,6 +34,7 @@ function execSQL_Async(sql, callback) {
             function(cb) {
                 pool.getConnection(function(err, conn) {
                     if (err) {
+                        console.error('execSQL_Async: get connection error, ' + err.message || '' + ' '+ err.stack || '');
                         return cb(err, null);
                     }
                     return cb(null, conn);
@@ -37,7 +43,11 @@ function execSQL_Async(sql, callback) {
             function(conn, cb) {
                 console.log('开始执行SQL:' + sql);
                 conn.query(sql, function(err, rows) {
+                    // release the connection to pool
+                    conn.release();
+
                     if (err) {
+                        console.error('execSQL_Async: exec sql error, ' + err.message || '' + ' '+ err.stack || '');
                         return cb(err, null);
                     }
                     return cb(null, rows);
@@ -73,8 +83,13 @@ function execSQL_Async(sql, callback) {
     // });
 }
 
+function escapeField(fieldData) {
+    return mysql.escape(fieldData);
+}
+
 
 module.exports = {
     execSQL: execSQL,
-    execSQL_Async: execSQL_Async
+    execSQL_Async: execSQL_Async,
+    escapeField: escapeField
 }

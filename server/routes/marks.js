@@ -1,4 +1,5 @@
 var express = require('express');
+var async = require('async');
 var dao_marks = require('../dao/marks');
 var utils = require('../utils');
 var router = express.Router();
@@ -24,7 +25,7 @@ router.get('/getAll', function(req, res) {
 });
 
 router.get('/syncUp', function(req, res) {
-    var userid = req.query.userid;
+    var userId = req.query.userId;
     var syncUpItems = req.query.syncUpItems;
     var syncUpItemsArr = JSON.parse(syncUpItems);
     var createArr = [], removeArr = [], changeArr = [], moveArr = [], reorderArr = [];
@@ -51,8 +52,11 @@ router.get('/syncUp', function(req, res) {
     }
     // todo
     async.parallel({
-        createItems: function() {
-            // todo
+        createItems: function(lineFinish) {
+            // todo query all parentIds
+            dao_marks.createUserMarks(userId, createArr, function() {
+                lineFinish(null, null);
+            });
         },
         removeItems: function() {
             // todo
