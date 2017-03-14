@@ -11,19 +11,25 @@ var pool = mysql.createPool({
 //     console.error('连接池已关闭' + err);
 // })
 
-function execSQL(sql, params, callback) {
+
+function execSQL(sql, callback) {
     try {
         pool.getConnection(function(err, conn) {
             if (err) {
+                console.error('execSQL: get connection error: ' + err.message || '' + ' ' + err.stack || '');
                 return callback(err, null);
             }
-            conn.query(sql, params, function(err, rows) {
+            conn.query(sql, function(err, rows) {
+                // release the connection to pool
+                conn.release();
                 if (err) {
-                    conn.release();
-                    return callback(err, null);
+                    console.error('execSQL: exec sql error, ' + err.message || '' + ' ' + err.stack || '');
+                    callback(err, null);
+
                 }
                 callback(null, rows);
             });
+
         });
     } catch (e) {
         console.error(e.stack);
@@ -39,6 +45,7 @@ function execSQL_Async(sql, callback) {
             function(cb) {
                 pool.getConnection(function(err, conn) {
                     if (err) {
+                        console.error('execSQL_Async: get connection error, ' + err.message || '' + ' ' + err.stack || '');
                         return cb(err, null);
                     }
                     return cb(null, conn);
@@ -47,7 +54,11 @@ function execSQL_Async(sql, callback) {
             function(conn, cb) {
                 console.log('开始执行SQL:' + sql);
                 conn.query(sql, function(err, rows) {
+                    // release the connection to pool
+                    conn.release();
+
                     if (err) {
+                        console.error('execSQL_Async: exec sql error, ' + err.message || '' + ' ' + err.stack || '');
                         return cb(err, null);
                     }
                     return cb(null, rows);
@@ -85,8 +96,13 @@ function execSQL_Async(sql, callback) {
     // });
 }
 
+function escapeField(fieldData) {
+    return mysql.escape(fieldData);
+}
+
 
 module.exports = {
     execSQL: execSQL,
-    execSQL_Async: execSQL_Async
+    execSQL_Async: execSQL_Async,
+    escapeField: escapeField
 }
