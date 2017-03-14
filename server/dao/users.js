@@ -5,8 +5,9 @@ var dao = require('./mysql_utils');
  * @param {*用户id} userid 
  */
 function getVersion(userid, callback) {
-    var sql = 'select version from  usermarks where userid=' + userid;
-    dao.execSQL(sql, callback);
+    var sql = 'select version from  usermarks where userid=?';
+    var params = [userid];
+    dao.execSQL(sql, params, callback);
 }
 
 module.exports = {

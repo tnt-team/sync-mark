@@ -4,11 +4,11 @@ var utils = require('../utils');
 var router = express.Router();
 
 var SYNC_ITEM_TYPES = {
-  create: 'create',
-  remove: 'remove',
-  change: 'change',
-  move: 'move',
-  reorder: 'reorder'
+    create: 'create',
+    remove: 'remove',
+    change: 'change',
+    move: 'move',
+    reorder: 'reorder'
 };
 
 
@@ -23,15 +23,33 @@ router.get('/getAll', function(req, res) {
 
 });
 
+
+router.post('/batchUpdate', function(req, res) {
+    var userid = req.body.userid;
+    var marksArr = JSON.parse(req.body.marksArr);
+    dao_marks.addMarksBatch(userid, marksArr, function(err, result) {
+        if (err) {
+            utils.error2json(res, err);
+            return;
+        }
+        console.log('批量更新成功');
+        utils.result2json(res, result);
+    })
+});
+
 router.get('/syncUp', function(req, res) {
     var userid = req.query.userid;
     var syncUpItems = req.query.syncUpItems;
     var syncUpItemsArr = JSON.parse(syncUpItems);
-    var createArr = [], removeArr = [], changeArr = [], moveArr = [], reorderArr = [];
+    var createArr = [],
+        removeArr = [],
+        changeArr = [],
+        moveArr = [],
+        reorderArr = [];
     var ix, item;
     for (ix = 0; ix < syncUpItemsArr.length; ix++) {
         item = syncUpItemsArr[ix];
-        switch(item.type) {
+        switch (item.type) {
             case SYNC_ITEM_TYPES.create:
                 createArr.push(item);
                 break;

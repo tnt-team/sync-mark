@@ -5,7 +5,7 @@ function result2json(res, result) {
 
 function error2json(res, err) {
     packRes(res);
-    res.josn({ "error": err });
+    res.json({ "error": err });
 }
 
 function packRes(res) {

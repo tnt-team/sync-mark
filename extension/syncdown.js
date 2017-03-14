@@ -1,16 +1,15 @@
-var SYNC_DOWN_DELAY = 0.1;
 var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
 var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
-
-var REMOTE_HOST = 'http://localhost:3000'; //测试本地模拟远程服务器
+var SYNC_DOWN_DELAY = 0.1;
+var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
 localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
 localStorage.setItem(SYNC_MARK_VERSION, 0); //模拟版本号
 
 //创建定时任务
 browser.alarms.create('sync', {
-    periodInMinutes: SYNC_DOWN_DELAY
-        // delayInMinutes: SYNC_DOWN_DELAY
+    // periodInMinutes: SYNC_DOWN_DELAY
+    delayInMinutes: SYNC_DOWN_DELAY
 });
 
 
@@ -27,15 +26,21 @@ browser.alarms.onAlarm.addListener(function(alarm) {
     }
     var version = localStorage.getItem(SYNC_MARK_VERSION);
 
+    //向服务器初始化书签，测试用
     getAllMarks(function(err, items) { //获取浏览器书签
         if (err) {
             console.log('获取本地书签错误');
             return;
         }
         var marksArr = parseMarks2Array(items[0]);
-
-
-
+        console.log('marksArr' + marksArr);
+        batchUpdateMarks(userid, marksArr, function(err) {
+            if (err) {
+                console.error('向服务器初始化书签错误');
+                return;
+            }
+            console.log('同步成功');
+        });
     });
 
 
@@ -116,4 +121,28 @@ function getVersion(userid, callback) {
             callback(textStatus, null);
         }
     });
+}
+
+/**
+ * 批量更新书签
+ * @param {*书签数组} marks 
+ * @param {*回调} callback 
+ */
+function batchUpdateMarks(userid, marksArr, callback) {
+    $.ajax({
+        url: REMOTE_HOST + '/marks/batchUpdate',
+        type: 'post',
+        data: { userid: userid, marksArr: JSON.stringify(marksArr) },
+        success: function(data) {
+            if (data.error) {
+                return callback(data.error);
+            }
+            callback(null);
+
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            callback(textStatus);
+        }
+    })
+
 }

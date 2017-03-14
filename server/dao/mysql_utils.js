@@ -7,18 +7,28 @@ var pool = mysql.createPool({
     database: 'syncmarks'
 });
 
-function execSQL(sql, callback) {
-    pool.getConnection(function(err, conn) {
-        if (err) {
-            return callback(err, null);
-        }
-        conn.query(sql, function(err, rows) {
+// pool.end(function(err) {
+//     console.error('连接池已关闭' + err);
+// })
+
+function execSQL(sql, params, callback) {
+    try {
+        pool.getConnection(function(err, conn) {
             if (err) {
-                callback(err, null);
+                return callback(err, null);
             }
-            callback(null, rows);
+            conn.query(sql, params, function(err, rows) {
+                if (err) {
+                    conn.release();
+                    return callback(err, null);
+                }
+                callback(null, rows);
+            });
         });
-    });
+    } catch (e) {
+        console.error(e.stack);
+        callback(err);
+    }
 }
 
 
@@ -46,9 +56,11 @@ function execSQL_Async(sql, callback) {
         ], function(err, result) {
             if (err) {
                 console.error('数据库查询失败' + err);
+                conn.destroy();
                 callback(err, null);
             }
             console.log("查询结果是：" + JSON.stringify(result));
+            conn.release();
             callback(null, result);
         });
     } catch (e) {

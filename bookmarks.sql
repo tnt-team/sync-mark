@@ -5,13 +5,13 @@
  Source Server Type    : MySQL
  Source Server Version : 50716
  Source Host           : localhost
- Source Database       : nodetest
+ Source Database       : syncmarks
 
  Target Server Type    : MySQL
  Target Server Version : 50716
  File Encoding         : utf-8
 
- Date: 03/05/2017 11:52:05 AM
+ Date: 03/14/2017 09:50:08 AM
 */
 
 SET NAMES utf8;
@@ -23,20 +23,31 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `bookmark`;
 CREATE TABLE `bookmark` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `name` varchar(45) CHARACTER SET utf8 NOT NULL COMMENT '书签名',
-  `order` tinyint(4) NOT NULL COMMENT '排序',
+  `markid` varchar(30) NOT NULL COMMENT '书签id',
+  `title` varchar(200) CHARACTER SET utf8 NOT NULL COMMENT '书签名',
+  `index` tinyint(4) NOT NULL COMMENT '排序',
   `type` tinyint(1) NOT NULL COMMENT '类型，0为文件夹，1为书签',
-  `parentId` bigint(11) unsigned NOT NULL COMMENT '父id，为0表示顶级书签',
-  `userid` bigint(11) unsigned DEFAULT '0',
+  `parentId` bigint(11) unsigned DEFAULT NULL COMMENT '父id，为0表示顶级书签',
+  `userid` bigint(11) unsigned DEFAULT '0' COMMENT '用户id',
+  `dataAdded` bigint(20) DEFAULT NULL COMMENT '添加日期',
+  `markparentid` varchar(30) DEFAULT NULL COMMENT '书签id的父id',
+  `url` varchar(200) DEFAULT NULL COMMENT '书签链接',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=243 DEFAULT CHARSET=latin1;
 
 -- ----------------------------
---  Records of `bookmark`
+--  Table structure for `usermarks`
 -- ----------------------------
-BEGIN;
-INSERT INTO `bookmark` VALUES ('1', '科技', '1', '1', '0', null);
-COMMIT;
+DROP TABLE IF EXISTS `usermarks`;
+CREATE TABLE `usermarks` (
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT,
+  `userid` bigint(11) unsigned NOT NULL COMMENT '用户id',
+  `marksid` bigint(20) NOT NULL COMMENT '书签id',
+  `version` smallint(2) NOT NULL DEFAULT '0' COMMENT '当前版本号',
+  `addtime` timestamp NULL DEFAULT NULL COMMENT '添加时间',
+  `updatetime` timestamp NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 -- ----------------------------
 --  Table structure for `users`
@@ -51,12 +62,5 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_UNIQUE` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-
--- ----------------------------
---  Records of `users`
--- ----------------------------
-BEGIN;
-INSERT INTO `users` VALUES ('1', 'wthfeng', '123456', '2017-01-21 00:00:00.000000', 'wthfeng@126.com');
-COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;

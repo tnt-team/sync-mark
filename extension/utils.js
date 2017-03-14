@@ -84,12 +84,18 @@ function parseMarks2Array(marksObject) {
     mark.index = marksObject.index;
     mark.url = marksObject.url;
     mark.parentId = marksObject.parentId;
+    if (!mark.parentId) {
+        mark.parentId = '0';
+    }
+    if (!mark.url) {
+        mark.url = '';
+    }
     if (marksObject.children) {
         mark.type = 0;
         marks.push(mark);
         let num = marksObject.children.length;
         for (let i = 0; i < num; i++) {
-            marks = marks.concat(parseMarkArray(marksObject.children[i]));
+            marks = marks.concat(parseMarks2Array(marksObject.children[i]));
         }
         return marks;
     } else {
@@ -118,7 +124,7 @@ function parseMarks2Map(marksObject) {
         let num = marksObject.children.length;
         for (let i = 0; i < num; i++) {
             //对象合并
-            marks = Object.assign(marks, parseMarkArray(marksObject.children[i]));
+            marks = Object.assign(marks, parseMarks2Map(marksObject.children[i]));
         }
         return marks;
     } else {
