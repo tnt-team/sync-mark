@@ -34,6 +34,7 @@ router.post('/batchUpdate', function(req, res) {
             return;
         }
         console.log('批量更新成功');
+        console.log('result：' + result);
         utils.result2json(res, result);
     })
 });

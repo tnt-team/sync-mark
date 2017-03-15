@@ -1,4 +1,5 @@
 var dao = require('./mysql_utils');
+var constant = require('../constant');
 
 /**
  * 根据用户id获取所有书签
@@ -10,6 +11,12 @@ function getAllMarks(userid, callback) {
     dao.execSQL(selectAllSQL, params, callback);
 }
 
+/**
+ * 批量添加用户书签
+ * @param {*用户id} userid 
+ * @param {*书签数组} marksArr 
+ * @param {*回调} callback 
+ */
 function addMarksBatch(userid, marksArr, callback) {
     var dataSQL = [],
         insertSQL = '',
@@ -33,9 +40,15 @@ function addMarksBatch(userid, marksArr, callback) {
         dataSQL.push(arr);
     }
 
-    var sql = 'insert into bookmark (userid,markid,markparentid,title,`index`,`type`,url) values ' + insertSQL;
-    var params = dataSQL;
-    dao.execSQL(sql, params, callback);
+    var batchSQL = 'insert into bookmark (userid,fx_markid,fx_markparentid,title,`index`,`type`,url) values ' + insertSQL;
+    var batchParams = dataSQL;
+
+    var updateVersionSQL = constant.COMMON_SQL.INC_VERSION_SQL;
+
+    var getVersionSQL = constant.COMMON_SQL.GET_VERSION_SQL;
+    var versionParam = [{ userid: userid }];
+    var sqls = [{ sql: batchSQL, params: batchParams }, { sql: updateVersionSQL, params: versionParam }, { sql: getVersionSQL, params: versionParam }];
+    dao.execSQL4Trans(sqls, callback);
 
 }
 
@@ -60,7 +73,7 @@ function createUserMarks(userId, createArr, callback) {
         // userid
         insertBody += userId + ',';
         // gentime todo format
-        
+
         insertBody += ')';
     }
     var insertSql = insertHead + insertBody;
@@ -69,10 +82,8 @@ function createUserMarks(userId, createArr, callback) {
 
 module.exports = {
     getAllMarks: getAllMarks,
-<<<<<<< HEAD
-    addMarksBatch: addMarksBatch
 
-=======
+    addMarksBatch: addMarksBatch,
+
     createUserMarks: createUserMarks
->>>>>>> 43f730a151da00ade2b6d0845a709ece1314b50b
 }
