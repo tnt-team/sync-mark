@@ -1,10 +1,13 @@
 /**
- * 获取所有书签
+ * 获取所有书签,返回值为对象
  * @param {*回调函数} callback,有2个参数，第一个为err,第二个为获取到的书签对象
  */
 function getAllMarks(callback) {
     var getItems = browser.bookmarks.getTree();
     getItems.then(function(items) {
+        if (myBrowser() == 'F') { //临时写法
+            return callback(null, items[0]);
+        }
         callback(null, items);
     }, function(err) {
         callback(err, null);
@@ -64,13 +67,45 @@ function updateMark(id, title, url, callback) {
  * @param {*回调} callback 
  */
 function getByIdOrArray(ids, callback) {
-    get = browser.bookmarks.get(ids);
+    let get = browser.bookmarks.get(ids);
     get.then(function(items) {
         callback(null, items);
     }, function(err) {
         callback(err, null);
     });
 }
+
+
+// 书签储存API
+
+/**
+ * 储存对象到Storage
+ * @param {*要储存的对象} obj 
+ * @param {*回调} callback 
+ */
+function set2Storage(obj, callback) {
+    let setting = browser.storage.local.set(obj);
+    setting.then(function() {
+        callback(null);
+    }, function(err) {
+        callback(err);
+    });
+}
+
+/**
+ * 从Storage中取出对象
+ * @param {*取出对象主键} key 
+ * @param {*} callback 
+ */
+function getFromStorage(key, callback) {
+    let setting = browser.storage.local.get(key);
+    setting.then(function(data) {
+        callback(null, data.version);
+    }, function(err) {
+        callback(err);
+    })
+}
+
 
 /**
  * 将书签对象转为数组形式
@@ -132,6 +167,21 @@ function parseMarks2Map(marksObject) {
         marks[id] = mark;
         return marks;
     }
+}
+
+function myBrowser() {
+    var userAgent = navigator.userAgent;
+    if (userAgent.indexOf("Opera") > -1) {
+        return "O";
+    }
+    if (userAgent.indexOf("Chrome") > -1) {
+        return "C";
+    }
+    if (userAgent.indexOf("Firefox") > -1) {
+        return "F";
+    }
+    return "未支持";
+
 }
 
 

@@ -27,50 +27,57 @@ browser.alarms.onAlarm.addListener(function(alarm) {
     var version = localStorage.getItem(SYNC_MARK_VERSION);
 
     //向服务器初始化书签，测试用
-    getAllMarks(function(err, items) { //获取浏览器书签
+    // getAllMarks(function(err, items) { //获取浏览器书签
+    //     if (err) {
+    //         console.log('获取本地书签错误');
+    //         return;
+    //     }
+    //     var marksArr = parseMarks2Array(items[0]);
+    //     console.log('marksArr' + marksArr);
+    //     batchUpdateMarks(userid, marksArr, function(err) {
+    //         if (err) {
+    //             console.error('向服务器初始化书签错误');
+    //             return;
+    //         }
+    //         console.log('同步成功');
+    //     });
+    // });
+
+
+    getFromStorage('version', function(err, localVersion) {
         if (err) {
-            console.log('获取本地书签错误');
+            console.error('获取本地版本号失败')
             return;
         }
-        var marksArr = parseMarks2Array(items[0]);
-        console.log('marksArr' + marksArr);
-        batchUpdateMarks(userid, marksArr, function(err) {
+        getVersion(userid, function(err, remoteVersion) { //获取版本号
             if (err) {
-                console.error('向服务器初始化书签错误');
+                console.error('获取远程版本号失败');
                 return;
             }
-            console.log('同步成功');
+            if (remoteVersion <= localVersion) { //远程比本地版本小
+                if (remoteVersion != localVersion) {
+                    let obj = { version: remoteVersion };
+                    set2Storage(obj, function() {});
+                }
+            }
+            if (remoteVersion > version) { //服务器的版本较新
+                downAllData(userid, function(err, remoteMrks) { //获取服务器书签数据
+                    if (err) {
+                        console.error('获取服务器书签数据失败');
+                    }
+                    getAllMarks(function(err, localMarks) { //获取浏览器书签
+                        if (err) {
+                            console.log('获取本地书签错误');
+                            return;
+                        }
+                        console.log('同步开始：');
+                        updateLocalMarks(localMarks, remoteMrks);
+                    });
+                })
+            }
+
         });
     });
-
-
-
-
-
-    // getVersion(userid, function(err, curVersion) { //获取版本号
-    //     if (!curVersion) {
-    //         console.error(curVersion);
-    //         //TODO 本地比服务器的新 待处理
-    //     }
-    //     if (curVersion > version) { //服务器的版本较新
-    //         downAllData(userid, function(err, data) { //获取服务器书签数据
-    //             if (err) {
-    //                 console.error('获取服务器书签数据失败');
-    //             }
-    //             getAllMarks(function(err, items) { //获取浏览器书签
-    //                 if (err) {
-    //                     console.log('获取本地书签错误');
-    //                     return;
-    //                 }
-    //                 console.log('本地书签：');
-    //                 console.log(JSON.stringify(items[0].children[1]));
-    //             });
-
-    //         })
-
-    //     }
-
-    // });
 });
 
 /**
@@ -137,12 +144,36 @@ function batchUpdateMarks(userid, marksArr, callback) {
             if (data.error) {
                 return callback(data.error);
             }
-            callback(null);
-
+            //设置版本号
+            let version = { version: data.result[0].version };
+            set2Storage(version, function(err) {
+                if (err) {
+                    return callback(err, null);
+                }
+                callback(null);
+            });
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             callback(textStatus);
         }
     })
+}
 
+/**
+ * 根据远程更新本地书签
+ * @param {*本地书签} localMarks 
+ * @param {*远程书签} remoteMrks 
+ */
+function updateLocalMarks(localMarks, remoteMrks, callback) {
+    var marksMap = parseMarks2Map(localMarks);
+    remoteMrks.forEach(function(item) {
+        let mark = marksMap[item.fx_markid];
+        if (!mark) { //本地少标签
+            createMark(item, function() {});
+
+        }
+        let isTitle = item.title == mark.title ? null : item.title;
+        let isUrl = item.url == mark.url ? null : item.url;
+        updateMark(item.fx_markid, isTitle, isUrl, function() {});
+    });
 }
