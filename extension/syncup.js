@@ -1,3 +1,5 @@
+console.log('syncup init begin');
+
 QUEUE_DELAY = 500;
 
 SYNC_ITEM_TYPES = {
@@ -39,9 +41,16 @@ function SyncUpItem(type, id, data) {
 //   JSON.stringify(this);
 // };
 
+/**
+ * this queue combine lots of same bookmark creating and removing request in a short time into one, 
+ * meanwhile, it combine operations by same item in a short time into one.
+ * @param {Function} fn 
+ */
 function SyncUpQueue(fn) {
   var that = this;
   var outputArr;
+  var outputType;
+  var lastItem;
   var timeoutId;
 
   function delayCall() {
@@ -61,14 +70,76 @@ function SyncUpQueue(fn) {
 
   this.addSyncUp = function(syncUpItem) {
     console.log('addSyncUp: ' + syncUpItem.valueOf());
-    that._syncUpDataArr.push(syncUpItem);
-    // console.log(delayCall);
     if (timeoutId) {
       console.log('removeDelayCall: ');
       clearTimeout(timeoutId);
+    }
+    // not the first request, check last request item whether same with current or not
+    if (lastItem && lastItem.id === syncUpItem.id) {
+      // if queue more than one member, execute requests before the last one.
+      if (that._syncUpDataArr.length > 1) {
+        that._syncUpDataArr.pop();
+        // clearTimeout(timeoutId);
+        delayCall();
+        console.log('create item bonus: ');
+        that._syncUpDataArr.push(lastItem);
+      }
+      // maybe remove, move, or change
+      if (lastItem.type === SYNC_ITEM_TYPES.create && syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+        outputType = null;
+        lastItem = null;
+        that._syncUpDataArr = [];
+      }
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.change) {
+        Object.keys(syncUpItem.changeInfo).forEach(function(pk) {
+          if (pk === 'id') return;
+          lastItem[pk] = syncUpItem.changeInfo[pk];
+        });
+      }
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.move) {
+        lastItem.index = syncUpItem.changeInfo.index;
+        lastItem.parentId = syncUpItem.changeInfo.parentId;
+      }
+      // todo syncUpItem.type === SYNC_ITEM_TYPES.reorder
       makeDelayCall();
-    } else {
-      makeDelayCall();
+    }
+    // not the first request, and not same request item
+    else if (lastItem && lastItem.id !== SyncUpItem.id) {
+      //check whether request type is same or not
+      if (syncUpItem.type === outputType) {
+        that._syncUpDataArr.push(syncUpItem);
+        lastItem = syncUpItem;
+        makeDelayCall();
+      } 
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+        console.log('change item req queue: ');
+        delayCall();
+        that._syncUpDataArr.push(syncUpItem);
+        outputType = syncUpItem.type;
+        lastItem = syncUpItem;
+        makeDelayCall();
+      }
+      else {
+        console.log('single item req: ');
+        delayCall();
+        that._syncUpDataArr.push(syncUpItem);
+        outputType = syncUpItem.type;
+        lastItem = syncUpItem;
+        delayCall();
+      }
+    }
+    // first request
+    else {
+      that._syncUpDataArr.push(syncUpItem);
+      outputType = syncUpItem.type;
+      if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+        lastItem = syncUpItem;
+        makeDelayCall();
+      }
+      // change, move and reorder exec at once
+      else {
+        delayCall();
+      }
     }
   }
 }
@@ -107,54 +178,58 @@ var syncUpWorker = {
 
 browser.bookmarks.onCreated.addListener(function(id, bookmark) {
   console.log('bookmarks.onCreated');
-  console.log(id);
+  // console.log(id);
   console.log(bookmark);
   if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.create, id, bookmark);
 });
 
 browser.bookmarks.onRemoved.addListener(function(id, removeInfo) {
-  // console.log('bookmarks.onRemoved');
+  console.log('bookmarks.onRemoved');
   // console.log(id);
-  // console.log(removeInfo);
-
+  removeInfo.id = id;
+  console.log(removeInfo);
   if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.remove, id, removeInfo);
 });
 
 browser.bookmarks.onChanged.addListener(function(id, changeInfo) {
-  // console.log('bookmarks.onChanged');
+  console.log('bookmarks.onChanged');
   // console.log(id);
-  // console.log(changeInfo);
+  changeInfo.id = id;
+  console.log(changeInfo);
 
   if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.change, id, changeInfo);
 });
 
 browser.bookmarks.onMoved.addListener(function(id, moveInfo) {
-  // console.log('bookmarks.onMoved');
+  console.log('bookmarks.onMoved');
   // console.log(id);
-  // console.log(moveInfo);
+  moveInfo.id = id;
+  console.log(moveInfo);
 
   if (bookmarkLock.isLocked) return;
   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.move, id, moveInfo);
 });
 
-browser.bookmarks.onChildrenReordered.addListener(function(id, reorderInfo) {
-  // console.log('bookmarks.onChildrenReordered');
-  // console.log(id);
-  // console.log(reorderInfo);
+// browser.bookmarks.onChildrenReordered && browser.bookmarks.onChildrenReordered.addListener(function(id, reorderInfo) {
+//   console.log('bookmarks.onChildrenReordered');
+//   console.log(id);
+//   console.log(reorderInfo);
 
-  if (bookmarkLock.isLocked) return;
-  syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.reorder, id, reorderInfo);
-});
+//   if (bookmarkLock.isLocked) return;
+//   syncUpWorker.addSyncUp(SYNC_ITEM_TYPES.reorder, id, reorderInfo);
+// });
 
-// browser.bookmarks.onImportBegan.addListener(() => {
+// browser.bookmarks.onImportBegan && browser.bookmarks.onImportBegan.addListener(() => {
 //   console.log('bookmarks.onImportBegan');
 //   isImport = true;
 // });
 
-// browser.bookmarks.onImportEnded.addListener(() => {
+// browser.bookmarks.onImportEnded && browser.bookmarks.onImportEnded.addListener(() => {
 //   console.log('bookmarks.onImportEnded');
 //   isImport = false;
 // });
+
+console.log('syncup init end');
