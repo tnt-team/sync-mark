@@ -25,7 +25,8 @@
     "permissions": [
         "bookmarks", //书签
         "tabs", //页面
-        "alarms"
+        "alarms",
+        "storage"
         // "http://localhost:3000/*",
         // "webRequest"
     ],
