@@ -21,6 +21,7 @@
     "morgan": "~1.7.0",
     "mysql": "^2.13.0",
     "pug": "~2.0.0-beta10",
-    "serve-favicon": "~2.3.2"
+    "serve-favicon": "~2.3.2",
+    "uuid": "^3.0.1"
   }
 }

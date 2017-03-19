@@ -17,12 +17,14 @@ function getAllMarks(userid, callback) {
  * @param {*书签数组} marksArr 
  * @param {*回调} callback 
  */
-function addMarksBatch(userid, marksArr, callback) {
+function addMarksBatch(userid, marksArr, browser_type, callback) {
     var dataSQL = [],
         insertSQL = '',
         num = marksArr.length;
     for (let i = 0; i < num; i++) {
         let arr = [];
+        arr.push(marksArr[i]._id);
+        arr.push(marksArr[i]._pid);
         arr.push(parseInt(userid));
         arr.push(marksArr[i].id);
         arr.push(marksArr[i].parentId);
@@ -40,7 +42,7 @@ function addMarksBatch(userid, marksArr, callback) {
         dataSQL.push(arr);
     }
 
-    var batchSQL = 'insert into bookmark (userid,fx_markid,fx_markparentid,title,`index`,`type`,url) values ' + insertSQL;
+    var batchSQL = useInsertSQLByBrowser(browser_type) + insertSQL;
     var batchParams = dataSQL;
 
     var updateVersionSQL = constant.COMMON_SQL.INC_VERSION_SQL;
@@ -50,6 +52,20 @@ function addMarksBatch(userid, marksArr, callback) {
     var sqls = [{ sql: batchSQL, params: batchParams }, { sql: updateVersionSQL, params: versionParam }, { sql: getVersionSQL, params: versionParam }];
     dao.execSQL4Trans(sqls, callback);
 
+}
+
+/**
+ * 根据浏览器选择插入SQL
+ * @param {*浏览器标识} browser 
+ */
+function useInsertSQLByBrowser(browser) {
+    var sql = '';
+    if (browser == 'Chrome') {
+        sql = 'insert into bookmark (id,parentid,userid,cr_markid,cr_markparentid,title,`index`,`type`,url) values ';
+    } else {
+        sql = 'insert into bookmark (id,parentid,userid,fx_markid,fx_markparentid,title,`index`,`type`,url) values ';
+    }
+    return sql;
 }
 
 /**

@@ -5,7 +5,7 @@
 function getAllMarks(callback) {
     var getItems = browser.bookmarks.getTree();
     getItems.then(function(items) {
-        if (myBrowser() == 'F') { //临时写法
+        if (myBrowser() == 'Firefox') { //临时写法
             return callback(null, items[0]);
         }
         callback(null, items);
@@ -54,7 +54,7 @@ function updateMark(id, title, url, callback) {
     if (title) change.title = title;
     if (url) change.url = url;
     update = browser.bookmarks.update(id, change);
-    updateMark.then(function(item) {
+    update.then(function(item) {
         callback(null, item);
     }, function(err) {
         callback(err, null);
@@ -172,16 +172,15 @@ function parseMarks2Map(marksObject) {
 function myBrowser() {
     var userAgent = navigator.userAgent;
     if (userAgent.indexOf("Opera") > -1) {
-        return "O";
+        return "Opera";
     }
     if (userAgent.indexOf("Chrome") > -1) {
-        return "C";
+        return "Chrome";
     }
     if (userAgent.indexOf("Firefox") > -1) {
-        return "F";
+        return "Firefox";
     }
     return "未支持";
-
 }
 
 
