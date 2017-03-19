@@ -1,15 +1,26 @@
 var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
 var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
-var SYNC_DOWN_DELAY = 0.1;
+var SYNC_INIT_DELAY = 0.1;
+var SYNC_DOWN_DELAY = 0.5;
 var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
 localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
-localStorage.setItem(SYNC_MARK_VERSION, 0); //模拟版本号
+set2Storage({ SYNC_MARK_VERSION: 1 }, function() {});
 
-//创建定时任务
+// 定时任务： 首次初始化书签
+// browser.alarms.create('init_marks', {
+//     delayInMinutes: SYNC_INIT_DELAY
+// });
+
+// browser.alarms.onAlarm.addListener(function(alarm) {
+//     if (alarm.name != 'init_marks') {
+//         return;
+//     }
+// });
+
+//定时任务：定时同步书签数据
 browser.alarms.create('sync', {
-    // periodInMinutes: SYNC_DOWN_DELAY
-    delayInMinutes: SYNC_DOWN_DELAY
+    periodInMinutes: SYNC_DOWN_DELAY
 });
 
 
@@ -18,14 +29,65 @@ browser.alarms.onAlarm.addListener(function(alarm) {
     if (alarm.name != 'sync') {
         return;
     }
-    console.error('同步开始')
     var userid = localStorage.getItem(SYNC_USER_NAME_ID);
     if (!userid) {
         console.log('用户未登陆');
         browser.alarms.clear('sync');
         return;
     }
-    var version = localStorage.getItem(SYNC_MARK_VERSION);
+    getFromStorage(SYNC_MARK_VERSION, function(err, localVersion) {
+        if (err) {
+            console.error('获取本地版本号失败')
+            return;
+        }
+        console.log('localversion:' + JSON.stringify(localVersion));
+        getVersion(userid, function(err, remoteVersion) { //获取版本号
+            if (err) {
+                console.error('获取远程版本号失败');
+                return;
+            }
+            if (remoteVersion <= localVersion) { //远程比本地版本小或相等
+                console.log('不需同步');
+                if (remoteVersion != localVersion) {
+                    let obj = { version: remoteVersion };
+                    set2Storage(obj, function() {});
+                }
+            }
+            if (remoteVersion > localVersion) { //服务器的版本较新
+                downAllData(userid, function(err, remoteMrks) { //获取服务器书签数据
+                    if (err) {
+                        console.error('获取服务器书签数据失败');
+                    }
+                    getAllMarks(function(err, localMarks) { //获取浏览器书签
+                        if (err) {
+                            console.log('获取本地书签错误');
+                            return;
+                        }
+                        console.log('同步开始：');
+                        updateLocalMarks(localMarks, remoteMrks, function(err) {
+                            if (err) {
+                                console.log('同步失败');
+                            }
+                            let obj = { SYNC_MARK_VERSION: remoteVersion };
+                            set2Storage(obj, function() {});
+                        });
+                    });
+                });
+            }
+        });
+    });
+});
+
+//初始化书签
+function initMarks() {
+    console.error('开始初始化');
+    var userid = localStorage.getItem(SYNC_USER_NAME_ID);
+    if (!userid) {
+        console.log('用户未登陆');
+        browser.alarms.clear('sync');
+        return;
+    }
+    // var version = localStorage.getItem(SYNC_MARK_VERSION);
 
     //向服务器初始化书签，测试用
     getAllMarks(function(err, items) { //获取浏览器书签
@@ -33,54 +95,17 @@ browser.alarms.onAlarm.addListener(function(alarm) {
             console.log('获取本地书签错误');
             return;
         }
-        console.log("items:" + JSON.stringify(items));
         var marksArr = parseMarks2Array(items);
-        console.log('marksArr' + marksArr);
         batchUpdateMarks(userid, marksArr, function(err) {
             if (err) {
                 console.error('向服务器初始化书签错误');
                 return;
             }
-            console.log('同步成功');
+            console.log('初始化成功');
         });
     });
+}
 
-
-    // getFromStorage('version', function(err, localVersion) {
-    //     if (err) {
-    //         console.error('获取本地版本号失败')
-    //         return;
-    //     }
-    //     getVersion(userid, function(err, remoteVersion) { //获取版本号
-    //         if (err) {
-    //             console.error('获取远程版本号失败');
-    //             return;
-    //         }
-    //         if (remoteVersion <= localVersion) { //远程比本地版本小
-    //             if (remoteVersion != localVersion) {
-    //                 let obj = { version: remoteVersion };
-    //                 set2Storage(obj, function() {});
-    //             }
-    //         }
-    //         if (remoteVersion > version) { //服务器的版本较新
-    //             downAllData(userid, function(err, remoteMrks) { //获取服务器书签数据
-    //                 if (err) {
-    //                     console.error('获取服务器书签数据失败');
-    //                 }
-    //                 getAllMarks(function(err, localMarks) { //获取浏览器书签
-    //                     if (err) {
-    //                         console.log('获取本地书签错误');
-    //                         return;
-    //                     }
-    //                     console.log('同步开始：');
-    //                     updateLocalMarks(localMarks, remoteMrks);
-    //                 });
-    //             })
-    //         }
-
-    //     });
-    // });
-});
 
 /**
  * 从服务器下载数据
@@ -88,10 +113,11 @@ browser.alarms.onAlarm.addListener(function(alarm) {
 function downAllData(userid, callback) {
     var marksData = {};
     console.error('开始下载数据');
+    var browser_type = myBrowser();
     $.ajax({
         url: REMOTE_HOST + '/marks/getAll',
         type: 'get',
-        data: { userid: userid },
+        data: { userid: userid, browser_type: browser_type },
         success: function(data) {
             marksData = data.result;
             callback(null, marksData);
@@ -166,22 +192,34 @@ function batchUpdateMarks(userid, marksArr, callback) {
  * @param {*本地书签} localMarks 
  * @param {*远程书签} remoteMrks 
  */
-function updateLocalMarks(localMarks, remoteMrks, callback) {
+function updateLocalMarks(localMarks, remoteMarks, callback) {
     var marksMap = parseMarks2Map(localMarks);
-    remoteMrks.forEach(function(item) {
-        let mark = marksMap[item.fx_markid];
+    remoteMarks.forEach(function(item) {
+        let mark = marksMap[item.markid];
         if (!mark) { //本地少书签
-            createMark(item, function() {});
+            createMark(item, function() {
+                if (err) {
+                    callback(err);
+                }
+            });
         } else {
             mark.isExist = 1;
             let isTitle = item.title == mark.title ? null : item.title;
             let isUrl = item.url == mark.url ? null : item.url;
-            updateMark(item.fx_markid, isTitle, isUrl, function() {});
+            updateMark(item.markid, isTitle, isUrl, function(err) {
+                callback(err);
+            });
         }
     });
-    localMarks.forEach(function(value) {
+    $.each(marksMap, function(attr, value) {
         if (!value.isExist) {
-            deleteMarkById(value.fx_markid);
+            deleteMarkById(attr, function(err) {
+                if (err) {
+                    callback(err);
+                }
+                console.log('删除书签：' + value.title);
+                callback(null);
+            });
         }
     });
 }

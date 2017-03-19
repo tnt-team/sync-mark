@@ -20,6 +20,7 @@ function getAllMarks(callback) {
  * @param {*回调} callback,若删除错误，第一个参数为err
  */
 function deleteMarkById(id, callback) {
+    console.log('id' + id);
     var del = browser.bookmarks.remove(id);
     del.then(function() {
         callback(null);
@@ -100,7 +101,7 @@ function set2Storage(obj, callback) {
 function getFromStorage(key, callback) {
     let setting = browser.storage.local.get(key);
     setting.then(function(data) {
-        callback(null, data.version);
+        callback(null, data[SYNC_MARK_VERSION]);
     }, function(err) {
         callback(err);
     })
@@ -180,7 +181,7 @@ function myBrowser() {
     if (userAgent.indexOf("Firefox") > -1) {
         return "Firefox";
     }
-    return "未支持";
+    return "Firefox";
 }
 
 

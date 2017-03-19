@@ -16,7 +16,8 @@ var SYNC_ITEM_TYPES = {
 
 router.get('/getAll', function(req, res) {
     var userid = req.query.userid;
-    dao_marks.getAllMarks(userid, function(err, data) {
+    var browser = req.query.browser_type;
+    dao_marks.getAllMarks(userid, browser, function(err, data) {
         if (err) {
             return utils.error2json(res, err);
         }
