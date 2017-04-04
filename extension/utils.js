@@ -101,10 +101,10 @@ function set2Storage(obj, callback) {
 function getFromStorage(key, callback) {
     let setting = browser.storage.local.get(key);
     setting.then(function(data) {
-        callback(null, data[SYNC_MARK_VERSION]);
+        callback(null, data);
     }, function(err) {
         callback(err);
-    })
+    });
 }
 
 

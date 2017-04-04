@@ -53,17 +53,17 @@ function SyncUpQueue(fn) {
   var lastItem;
   var timeoutId;
 
-  function delayCall() {
-    console.log('delayCall: ');
+  function syncCall() {
+    console.log('syncCall: ');
     outputArr = that._syncUpDataArr;
     that._syncUpDataArr = [];
-    fn(outputArr);
+    fn(outputArr, outputType);
     timeoutId = undefined;
   }
 
   function makeDelayCall() {
     console.log('makeDelayCall: ');
-    timeoutId = setTimeout(delayCall, QUEUE_DELAY);
+    timeoutId = setTimeout(syncCall, QUEUE_DELAY);
   }
 
   this._syncUpDataArr = [];
@@ -76,75 +76,100 @@ function SyncUpQueue(fn) {
     }
     // not the first request, check last request item whether same with current or not
     if (lastItem && lastItem.id === syncUpItem.id) {
-      // if queue more than one member, execute requests before the last one.
+      // if queue has more than one member, then execute previous items and queue the current item.
       if (that._syncUpDataArr.length > 1) {
         that._syncUpDataArr.pop();
         // clearTimeout(timeoutId);
-        delayCall();
+        syncCall();
         console.log('create item bonus: ');
         that._syncUpDataArr.push(lastItem);
       }
-      // maybe remove, move, or change
+      // the situation that member was initinally created and finially removed, that was equals nothing.
       if (lastItem.type === SYNC_ITEM_TYPES.create && syncUpItem.type === SYNC_ITEM_TYPES.remove) {
         outputType = null;
         lastItem = null;
         that._syncUpDataArr = [];
       }
+      // move operations just update item index and parentId
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.move) {
+        lastItem.index = syncUpItem.changeInfo.index;
+        lastItem.parentId = syncUpItem.changeInfo.parentId;
+      }
+      // change values
       else if (syncUpItem.type === SYNC_ITEM_TYPES.change) {
         Object.keys(syncUpItem.changeInfo).forEach(function(pk) {
           if (pk === 'id') return;
           lastItem[pk] = syncUpItem.changeInfo[pk];
         });
       }
-      else if (syncUpItem.type === SYNC_ITEM_TYPES.move) {
-        lastItem.index = syncUpItem.changeInfo.index;
-        lastItem.parentId = syncUpItem.changeInfo.parentId;
-      }
       // todo syncUpItem.type === SYNC_ITEM_TYPES.reorder
+
+      // wait for a few millseconds
       makeDelayCall();
     }
     // not the first request, and not same request item
     else if (lastItem && lastItem.id !== SyncUpItem.id) {
       //check whether request type is same or not
-      if (syncUpItem.type === outputType) {
-        that._syncUpDataArr.push(syncUpItem);
-        lastItem = syncUpItem;
-        makeDelayCall();
+      if (lastItem.type === SYNC_ITEM_TYPES.create || lastItem.type === SYNC_ITEM_TYPES.remove) {
+        if (syncUpItem.type === outputType) {
+          that._syncUpDataArr.push(syncUpItem);
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+          console.log('change item req queue: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          outputType = syncUpItem.type;
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else {
+          console.log('single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          outputType = SYNC_ITEM_TYPES.change;
+          lastItem = syncUpItem;
+          syncCall();
+        }
       } 
-      else if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
-        console.log('change item req queue: ');
-        delayCall();
-        that._syncUpDataArr.push(syncUpItem);
-        outputType = syncUpItem.type;
-        lastItem = syncUpItem;
-        makeDelayCall();
-      }
       else {
-        console.log('single item req: ');
-        delayCall();
-        that._syncUpDataArr.push(syncUpItem);
-        outputType = syncUpItem.type;
-        lastItem = syncUpItem;
-        delayCall();
+        if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+          console.log('single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          outputType = syncUpItem.type;
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else {
+          console.log('continue single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          outputType = SYNC_ITEM_TYPES.change;
+          lastItem = syncUpItem;
+          syncCall();
+        }
       }
     }
     // first request
     else {
       that._syncUpDataArr.push(syncUpItem);
-      outputType = syncUpItem.type;
+      
       if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
-        lastItem = syncUpItem;
-        makeDelayCall();
-      }
-      // change, move and reorder exec at once
+        outputType = syncUpItem.type;
+      } 
+      // change, move, reorder convert to change
       else {
-        delayCall();
+        outputType = SYNC_ITEM_TYPES.change
       }
+      lastItem = syncUpItem;
+      makeDelayCall();
     }
   }
 }
 
-var syncUpReq = function(syncUpItemArr) {
+var syncUpReq = function(syncUpItemArr, outputType) {
   console.log('syncUpReq: ' + syncUpItemArr.valueOf());
   syncTaskQueue.addSyncTask(function(taskFinish) {
     // $.ajax({

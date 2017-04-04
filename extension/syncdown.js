@@ -35,11 +35,12 @@ browser.alarms.onAlarm.addListener(function(alarm) {
         browser.alarms.clear('sync');
         return;
     }
-    getFromStorage(SYNC_MARK_VERSION, function(err, localVersion) {
+    getFromStorage(SYNC_MARK_VERSION, function(err, data) {
         if (err) {
             console.error('获取本地版本号失败')
             return;
         }
+        var localVersion = data[SYNC_MARK_VERSION];
         console.log('localversion:' + JSON.stringify(localVersion));
         getVersion(userid, function(err, remoteVersion) { //获取版本号
             if (err) {

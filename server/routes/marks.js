@@ -27,6 +27,7 @@ router.get('/getAll', function(req, res) {
 });
 
 
+
 router.post('/batchUpdate', function(req, res) {
     var userid = req.body.userid;
     var marksArr = JSON.parse(req.body.marksArr);
@@ -43,8 +44,10 @@ router.post('/batchUpdate', function(req, res) {
     })
 });
 
+
 router.get('/syncUp', function(req, res) {
     var userId = req.query.userId;
+    var agentFlag = req.query.agentFlag;
     var syncUpItems = req.query.syncUpItems;
     var syncUpItemsArr = JSON.parse(syncUpItems);
     var createArr = [],
@@ -55,21 +58,31 @@ router.get('/syncUp', function(req, res) {
     var ix, item;
     for (ix = 0; ix < syncUpItemsArr.length; ix++) {
         item = syncUpItemsArr[ix];
+        // todo other agent
         switch (item.type) {
             case SYNC_ITEM_TYPES.create:
-                createArr.push(item);
+                createArr.push(item.bookmark);
+                var bookmark;
+                if (agentFlag === 'firefox') {
+                    bookmark = {
+                        name: item.bookmark.title,
+                        order: item.bookmark.index,
+                        order: item.bookmark.index,
+                    };
+                }
+
                 break;
             case SYNC_ITEM_TYPES.remove:
-                removeArr.push(item);
+                removeArr.push(item.removeInfo);
                 break;
             case SYNC_ITEM_TYPES.change:
-                changeArr.push(item);
+                changeArr.push(item.changeInfo);
                 break;
             case SYNC_ITEM_TYPES.move:
-                moveArr.push(item);
+                moveArr.push(item.moveInfo);
                 break;
             case SYNC_ITEM_TYPES.reorder:
-                reorderArr.push(item);
+                reorderArr.push(item.reorderInfo);
                 break;
         }
     }
@@ -77,6 +90,7 @@ router.get('/syncUp', function(req, res) {
     async.parallel({
         createItems: function(lineFinish) {
             // todo query all parentIds
+            
             dao_marks.createUserMarks(userId, createArr, function() {
                 lineFinish(null, null);
             });
