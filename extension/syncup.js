@@ -1,6 +1,7 @@
 console.log('syncup init begin');
 
 QUEUE_DELAY = 500;
+SYNC_UP_DATA = 'syncUpData';
 
 SYNC_ITEM_TYPES = {
   create: 'create',
@@ -41,12 +42,67 @@ function SyncUpItem(type, id, data) {
 //   JSON.stringify(this);
 // };
 
+var syncUpStorgae = {
+  addToStorage: function(id, item) {
+    getFromStorage(SYNC_UP_DATA, function(err, data) {
+      if (err) {
+        console.error('addToStorage getFromStorage error');
+        return;
+      }
+      var syncData = {};
+      if (data) syncData = data;
+      syncData.id = item;
+      set2Storage(SYNC_UP_DATA, syncData);
+    });
+  },
+  removeFromStorage: function() {
+    getFromStorage(SYNC_UP_DATA, function(err, data) {
+      if (err) {
+        console.error('removeFromStorage getFromStorage error');
+        return;
+      }
+      var syncData = {};
+      if (data) syncData = data;
+      if (syncData.hasOwnProperty(id)) delete syncData.id;
+      set2Storage(SYNC_UP_DATA, syncData);
+    });
+  }
+};
+
+var syncUpReq = function(syncUpItemArr, outputType) {
+  console.log('syncUpReq: ' + syncUpItemArr.valueOf());
+  syncTaskQueue.addSyncTask(function(taskFinish) {
+    // $.ajax({
+    //   url: '',
+    //   data: {changes: JSON.stringify(syncUpItemArr)},
+    //   dataType: "json",
+    //   error: function() {
+    //     // todo err
+    //     // todo requeue
+    //     taskFinish();
+    //   },
+    //   headers: { token: localStorage.token },
+    //   timeout: 30000,
+    //   type: 'POST',
+    //   success: function() {
+    //     // todo succ
+    //     taskFinish();
+    //   }
+    // });
+    console.log('todo request');
+
+    //todo remove storage after sync
+  });
+};
+
 /**
  * this queue combine lots of same bookmark creating and removing request in a short time into one, 
  * meanwhile, it combine operations by same item in a short time into one.
+ * current situations: batch create, batch remove will be a list request, 
+ * other operations will be a item request;
  * @param {Function} fn 
  */
-function SyncUpQueue(fn) {
+function SyncUpQueue(storage, fn) {
   var that = this;
   var outputArr;
   var outputType;
@@ -113,6 +169,7 @@ function SyncUpQueue(fn) {
       if (lastItem.type === SYNC_ITEM_TYPES.create || lastItem.type === SYNC_ITEM_TYPES.remove) {
         if (syncUpItem.type === outputType) {
           that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
           lastItem = syncUpItem;
           makeDelayCall();
         }
@@ -120,6 +177,7 @@ function SyncUpQueue(fn) {
           console.log('change item req queue: ');
           syncCall();
           that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
           outputType = syncUpItem.type;
           lastItem = syncUpItem;
           makeDelayCall();
@@ -128,6 +186,7 @@ function SyncUpQueue(fn) {
           console.log('single item req: ');
           syncCall();
           that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
           outputType = SYNC_ITEM_TYPES.change;
           lastItem = syncUpItem;
           syncCall();
@@ -138,6 +197,7 @@ function SyncUpQueue(fn) {
           console.log('single item req: ');
           syncCall();
           that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
           outputType = syncUpItem.type;
           lastItem = syncUpItem;
           makeDelayCall();
@@ -146,6 +206,7 @@ function SyncUpQueue(fn) {
           console.log('continue single item req: ');
           syncCall();
           that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
           outputType = SYNC_ITEM_TYPES.change;
           lastItem = syncUpItem;
           syncCall();
@@ -155,6 +216,7 @@ function SyncUpQueue(fn) {
     // first request
     else {
       that._syncUpDataArr.push(syncUpItem);
+      storage.addToStorage(syncUpItem.id, syncUpItem);
       
       if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
         outputType = syncUpItem.type;
@@ -169,35 +231,13 @@ function SyncUpQueue(fn) {
   }
 }
 
-var syncUpReq = function(syncUpItemArr, outputType) {
-  console.log('syncUpReq: ' + syncUpItemArr.valueOf());
-  syncTaskQueue.addSyncTask(function(taskFinish) {
-    // $.ajax({
-    //   url: '',
-    //   data: {changes: JSON.stringify(syncUpItemArr)},
-    //   dataType: "json",
-    //   error: function() {
-    //     // todo err
-    //     // todo requeue
-    //     taskFinish();
-    //   },
-    //   headers: { token: localStorage.token },
-    //   timeout: 30000,
-    //   type: 'POST',
-    //   success: function() {
-    //     // todo succ
-    //     taskFinish();
-    //   }
-    // });
-    console.log('todo request');
-  });
-}
-var syncUpQueue = new SyncUpQueue(syncUpReq);
+var syncUpQueue = new SyncUpQueue(syncUpStorgae, syncUpReq);
 var syncUpWorker = {
   addSyncUp: function(type, id, data) {
     syncUpQueue.addSyncUp(new SyncUpItem(type, id, data));
   }
 }
+// requeue storage changes todo
 
 // var isImport = false;
 
@@ -258,3 +298,11 @@ browser.bookmarks.onMoved.addListener(function(id, moveInfo) {
 // });
 
 console.log('syncup init end');
+
+var gettingTree = browser.bookmarks.getTree();
+gettingTree.then(function(bookmarkItems) {
+  console.log('gettingTree:');
+  console.log(bookmarkItems[0]);
+}, function(error) {
+  console.log(`An error: ${error}`);
+});

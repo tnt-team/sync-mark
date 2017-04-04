@@ -5,7 +5,8 @@ var SYNC_DOWN_DELAY = 0.5;
 var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
 localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
-set2Storage({ SYNC_MARK_VERSION: 1 }, function() {});
+//todo initinal set 1
+set2Storage(SYNC_MARK_VERSION, 1);
 
 // 定时任务： 首次初始化书签
 // browser.alarms.create('init_marks', {

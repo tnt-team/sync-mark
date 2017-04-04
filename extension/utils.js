@@ -84,12 +84,10 @@ function getByIdOrArray(ids, callback) {
  * @param {*要储存的对象} obj 
  * @param {*回调} callback 
  */
-function set2Storage(obj, callback) {
-    let setting = browser.storage.local.set(obj);
-    setting.then(function() {
-        callback(null);
-    }, function(err) {
-        callback(err);
+function set2Storage(key, value) {
+    let setting = browser.storage.local.set({key, value});
+    setting.then(null, function(err) {
+        console.error('set2Storage error, key: ' + key + ', value: ' + value);
     });
 }
 
@@ -103,6 +101,7 @@ function getFromStorage(key, callback) {
     setting.then(function(data) {
         callback(null, data);
     }, function(err) {
+        console.error('getFromStorage error, key: ' + key);
         callback(err);
     });
 }
