@@ -1,6 +1,7 @@
 console.log('syncup init begin');
 
 QUEUE_DELAY = 500;
+SYNC_UP_DATA = 'syncUpData';
 
 SYNC_ITEM_TYPES = {
   create: 'create',
@@ -41,110 +42,34 @@ function SyncUpItem(type, id, data) {
 //   JSON.stringify(this);
 // };
 
-/**
- * this queue combine lots of same bookmark creating and removing request in a short time into one, 
- * meanwhile, it combine operations by same item in a short time into one.
- * @param {Function} fn 
- */
-function SyncUpQueue(fn) {
-  var that = this;
-  var outputArr;
-  var outputType;
-  var lastItem;
-  var timeoutId;
-
-  function delayCall() {
-    console.log('delayCall: ');
-    outputArr = that._syncUpDataArr;
-    that._syncUpDataArr = [];
-    fn(outputArr);
-    timeoutId = undefined;
+var syncUpStorgae = {
+  addToStorage: function(id, item) {
+    getFromStorage(SYNC_UP_DATA, function(err, data) {
+      if (err) {
+        console.error('addToStorage getFromStorage error');
+        return;
+      }
+      var syncData = {};
+      if (data) syncData = data;
+      syncData.id = item;
+      set2Storage(SYNC_UP_DATA, syncData);
+    });
+  },
+  removeFromStorage: function() {
+    getFromStorage(SYNC_UP_DATA, function(err, data) {
+      if (err) {
+        console.error('removeFromStorage getFromStorage error');
+        return;
+      }
+      var syncData = {};
+      if (data) syncData = data;
+      if (syncData.hasOwnProperty(id)) delete syncData.id;
+      set2Storage(SYNC_UP_DATA, syncData);
+    });
   }
+};
 
-  function makeDelayCall() {
-    console.log('makeDelayCall: ');
-    timeoutId = setTimeout(delayCall, QUEUE_DELAY);
-  }
-
-  this._syncUpDataArr = [];
-
-  this.addSyncUp = function(syncUpItem) {
-    console.log('addSyncUp: ' + syncUpItem.valueOf());
-    if (timeoutId) {
-      console.log('removeDelayCall: ');
-      clearTimeout(timeoutId);
-    }
-    // not the first request, check last request item whether same with current or not
-    if (lastItem && lastItem.id === syncUpItem.id) {
-      // if queue more than one member, execute requests before the last one.
-      if (that._syncUpDataArr.length > 1) {
-        that._syncUpDataArr.pop();
-        // clearTimeout(timeoutId);
-        delayCall();
-        console.log('create item bonus: ');
-        that._syncUpDataArr.push(lastItem);
-      }
-      // maybe remove, move, or change
-      if (lastItem.type === SYNC_ITEM_TYPES.create && syncUpItem.type === SYNC_ITEM_TYPES.remove) {
-        outputType = null;
-        lastItem = null;
-        that._syncUpDataArr = [];
-      }
-      else if (syncUpItem.type === SYNC_ITEM_TYPES.change) {
-        Object.keys(syncUpItem.changeInfo).forEach(function(pk) {
-          if (pk === 'id') return;
-          lastItem[pk] = syncUpItem.changeInfo[pk];
-        });
-      }
-      else if (syncUpItem.type === SYNC_ITEM_TYPES.move) {
-        lastItem.index = syncUpItem.changeInfo.index;
-        lastItem.parentId = syncUpItem.changeInfo.parentId;
-      }
-      // todo syncUpItem.type === SYNC_ITEM_TYPES.reorder
-      makeDelayCall();
-    }
-    // not the first request, and not same request item
-    else if (lastItem && lastItem.id !== SyncUpItem.id) {
-      //check whether request type is same or not
-      if (syncUpItem.type === outputType) {
-        that._syncUpDataArr.push(syncUpItem);
-        lastItem = syncUpItem;
-        makeDelayCall();
-      } 
-      else if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
-        console.log('change item req queue: ');
-        delayCall();
-        that._syncUpDataArr.push(syncUpItem);
-        outputType = syncUpItem.type;
-        lastItem = syncUpItem;
-        makeDelayCall();
-      }
-      else {
-        console.log('single item req: ');
-        delayCall();
-        that._syncUpDataArr.push(syncUpItem);
-        outputType = syncUpItem.type;
-        lastItem = syncUpItem;
-        delayCall();
-      }
-    }
-    // first request
-    else {
-      that._syncUpDataArr.push(syncUpItem);
-      outputType = syncUpItem.type;
-      if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
-        lastItem = syncUpItem;
-        makeDelayCall();
-      }
-      // change, move and reorder exec at once
-      else {
-        delayCall();
-      }
-    }
-  }
-}
-
-var syncUpReq = function(syncUpItemArr) {
+var syncUpReq = function(syncUpItemArr, outputType) {
   console.log('syncUpReq: ' + syncUpItemArr.valueOf());
   syncTaskQueue.addSyncTask(function(taskFinish) {
     // $.ajax({
@@ -165,14 +90,154 @@ var syncUpReq = function(syncUpItemArr) {
     //   }
     // });
     console.log('todo request');
+
+    //todo remove storage after sync
   });
+};
+
+/**
+ * this queue combine lots of same bookmark creating and removing request in a short time into one, 
+ * meanwhile, it combine operations by same item in a short time into one.
+ * current situations: batch create, batch remove will be a list request, 
+ * other operations will be a item request;
+ * @param {Function} fn 
+ */
+function SyncUpQueue(storage, fn) {
+  var that = this;
+  var outputArr;
+  var outputType;
+  var lastItem;
+  var timeoutId;
+
+  function syncCall() {
+    console.log('syncCall: ');
+    outputArr = that._syncUpDataArr;
+    that._syncUpDataArr = [];
+    fn(outputArr, outputType);
+    timeoutId = undefined;
+  }
+
+  function makeDelayCall() {
+    console.log('makeDelayCall: ');
+    timeoutId = setTimeout(syncCall, QUEUE_DELAY);
+  }
+
+  this._syncUpDataArr = [];
+
+  this.addSyncUp = function(syncUpItem) {
+    console.log('addSyncUp: ' + syncUpItem.valueOf());
+    if (timeoutId) {
+      console.log('removeDelayCall: ');
+      clearTimeout(timeoutId);
+    }
+    // not the first request, check last request item whether same with current or not
+    if (lastItem && lastItem.id === syncUpItem.id) {
+      // if queue has more than one member, then execute previous items and queue the current item.
+      if (that._syncUpDataArr.length > 1) {
+        that._syncUpDataArr.pop();
+        // clearTimeout(timeoutId);
+        syncCall();
+        console.log('create item bonus: ');
+        that._syncUpDataArr.push(lastItem);
+      }
+      // the situation that member was initinally created and finially removed, that was equals nothing.
+      if (lastItem.type === SYNC_ITEM_TYPES.create && syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+        outputType = null;
+        lastItem = null;
+        that._syncUpDataArr = [];
+      }
+      // move operations just update item index and parentId
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.move) {
+        lastItem.index = syncUpItem.changeInfo.index;
+        lastItem.parentId = syncUpItem.changeInfo.parentId;
+      }
+      // change values
+      else if (syncUpItem.type === SYNC_ITEM_TYPES.change) {
+        Object.keys(syncUpItem.changeInfo).forEach(function(pk) {
+          if (pk === 'id') return;
+          lastItem[pk] = syncUpItem.changeInfo[pk];
+        });
+      }
+      // todo syncUpItem.type === SYNC_ITEM_TYPES.reorder
+
+      // wait for a few millseconds
+      makeDelayCall();
+    }
+    // not the first request, and not same request item
+    else if (lastItem && lastItem.id !== SyncUpItem.id) {
+      //check whether request type is same or not
+      if (lastItem.type === SYNC_ITEM_TYPES.create || lastItem.type === SYNC_ITEM_TYPES.remove) {
+        if (syncUpItem.type === outputType) {
+          that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+          console.log('change item req queue: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
+          outputType = syncUpItem.type;
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else {
+          console.log('single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
+          outputType = SYNC_ITEM_TYPES.change;
+          lastItem = syncUpItem;
+          syncCall();
+        }
+      } 
+      else {
+        if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+          console.log('single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
+          outputType = syncUpItem.type;
+          lastItem = syncUpItem;
+          makeDelayCall();
+        }
+        else {
+          console.log('continue single item req: ');
+          syncCall();
+          that._syncUpDataArr.push(syncUpItem);
+          storage.addToStorage(syncUpItem.id, syncUpItem);
+          outputType = SYNC_ITEM_TYPES.change;
+          lastItem = syncUpItem;
+          syncCall();
+        }
+      }
+    }
+    // first request
+    else {
+      that._syncUpDataArr.push(syncUpItem);
+      storage.addToStorage(syncUpItem.id, syncUpItem);
+      
+      if (syncUpItem.type === SYNC_ITEM_TYPES.create || syncUpItem.type === SYNC_ITEM_TYPES.remove) {
+        outputType = syncUpItem.type;
+      } 
+      // change, move, reorder convert to change
+      else {
+        outputType = SYNC_ITEM_TYPES.change
+      }
+      lastItem = syncUpItem;
+      makeDelayCall();
+    }
+  }
 }
-var syncUpQueue = new SyncUpQueue(syncUpReq);
+
+var syncUpQueue = new SyncUpQueue(syncUpStorgae, syncUpReq);
 var syncUpWorker = {
   addSyncUp: function(type, id, data) {
     syncUpQueue.addSyncUp(new SyncUpItem(type, id, data));
   }
 }
+// requeue storage changes todo
 
 // var isImport = false;
 
@@ -233,3 +298,11 @@ browser.bookmarks.onMoved.addListener(function(id, moveInfo) {
 // });
 
 console.log('syncup init end');
+
+var gettingTree = browser.bookmarks.getTree();
+gettingTree.then(function(bookmarkItems) {
+  console.log('gettingTree:');
+  console.log(bookmarkItems[0]);
+}, function(error) {
+  console.log(`An error: ${error}`);
+});

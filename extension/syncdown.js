@@ -4,8 +4,11 @@ var SYNC_INIT_DELAY = 0.1;
 var SYNC_DOWN_DELAY = 10;
 var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
-localStorage.setItem(SYNC_USER_NAME_ID, 0); //模拟用户登录
-set2Storage({ SYNC_MARK_VERSION: 1 }, function() {});
+
+
+localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
+//todo initinal set 1
+set2Storage(SYNC_MARK_VERSION, 1);
 
 // 定时任务： 首次初始化书签
 // browser.alarms.create('init_marks', {
@@ -35,11 +38,12 @@ browser.alarms.onAlarm.addListener(function(alarm) {
         browser.alarms.clear('sync');
         return;
     }
-    getFromStorage(SYNC_MARK_VERSION, function(err, localVersion) {
+    getFromStorage(SYNC_MARK_VERSION, function(err, data) {
         if (err) {
             console.error('获取本地版本号失败')
             return;
         }
+        var localVersion = data[SYNC_MARK_VERSION];
         console.log('localversion:' + JSON.stringify(localVersion));
         getVersion(userid, function(err, remoteVersion) { //获取版本号
             if (err) {

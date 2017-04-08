@@ -13,6 +13,11 @@ var SYNC_ITEM_TYPES = {
     reorder: 'reorder'
 };
 
+var CLIENT_TYPES = {
+    firefox: 'firefox',
+    chrome: 'chrome'
+}
+
 
 router.get('/getAll', function(req, res) {
     var userid = req.query.userid;
@@ -25,6 +30,7 @@ router.get('/getAll', function(req, res) {
     });
 
 });
+
 
 
 router.post('/batchUpdate', function(req, res) {
@@ -43,62 +49,128 @@ router.post('/batchUpdate', function(req, res) {
     })
 });
 
+
 router.get('/syncUp', function(req, res) {
     var userId = req.query.userId;
+    var agentFlag = req.query.agentFlag;
     var syncUpItems = req.query.syncUpItems;
+    var syncUpType = req.query.syncUpType;
     var syncUpItemsArr = JSON.parse(syncUpItems);
-    var createArr = [],
-        removeArr = [],
-        changeArr = [],
-        moveArr = [],
-        reorderArr = [];
-    var ix, item;
-    for (ix = 0; ix < syncUpItemsArr.length; ix++) {
-        item = syncUpItemsArr[ix];
-        switch (item.type) {
-            case SYNC_ITEM_TYPES.create:
-                createArr.push(item);
-                break;
-            case SYNC_ITEM_TYPES.remove:
-                removeArr.push(item);
-                break;
-            case SYNC_ITEM_TYPES.change:
-                changeArr.push(item);
-                break;
-            case SYNC_ITEM_TYPES.move:
-                moveArr.push(item);
-                break;
-            case SYNC_ITEM_TYPES.reorder:
-                reorderArr.push(item);
-                break;
-        }
+
+    if (syncUpType === SYNC_ITEM_TYPES.create) {
+        var createItemArr = [];
+        var createIdDict = {};
+        var createClientIdDict = {};
+        var createUnknowParentItemArr = [];
+        syncUpItemsArr.forEach(function(item) {
+            id,parentid,userid,cr_markid,cr_markparentid,title,index,type,url
+            var createItem = {};
+            createItem.id = uuid();
+            createItem.userId = userId;
+            if (syncUpType === CLIENT_TYPES.chrome) {
+                createItem[dao_marks.chrome_markid] = item.id;
+                createItem[dao_marks.chrome_markparentid] = item.parentId;
+            }
+            else if (syncUpType === CLIENT_TYPES.firefox) {
+                createItem[dao_marks.firefox_markid] = item.id;
+                createItem[dao_marks.firefox_markparentid] = item.parentId;
+            }
+            else {
+                console.error('error syncUpType: ' + syncUpType);
+            }
+            createItem.title = item.title;
+            createItem.index = item.index;
+            // bookmark type todo
+            createItem.type = typeof item.url === 'string' ? 'bookmark': 'folder';
+            if (typeof item.url === 'string') createItem.url = item.url;
+            if (typeof item.parentId === 'string') {
+                if (createClientIdDict[item.parentId]) {
+                    createItem.parentId = createClientIdDict[item.parentId].id;
+                } else {
+                    createUnknowParentItemArr.push(createItem);
+                }
+            }
+            createIdDict[createItem.id] = createItem;
+            createClientIdDict[item.id] = createItem;
+            createItemArr.push(createItem);
+        })
+        async.waterfall([
+            function(done) {
+
+            },
+        ], function() {
+
+        });
+        dao_marks.createUserMarks(userId, createArr, function() {
+            lineFinish(null, null);
+        });
     }
+
+
+    // var createArr = [],
+    //     removeArr = [],
+    //     changeArr = [],
+    //     moveArr = [],
+    //     reorderArr = [];
+    // var ix, item;
+    // for (ix = 0; ix < syncUpItemsArr.length; ix++) {
+    //     item = syncUpItemsArr[ix];
+    //     // todo other agent
+    //     switch (item.type) {
+    //         case SYNC_ITEM_TYPES.create:
+    //             createArr.push(item.bookmark);
+    //             var bookmark;
+    //             if (agentFlag === 'firefox') {
+    //                 bookmark = {
+    //                     name: item.bookmark.title,
+    //                     order: item.bookmark.index,
+    //                     order: item.bookmark.index,
+    //                 };
+    //             }
+
+    //             break;
+    //         case SYNC_ITEM_TYPES.remove:
+    //             removeArr.push(item.removeInfo);
+    //             break;
+    //         case SYNC_ITEM_TYPES.change:
+    //             changeArr.push(item.changeInfo);
+    //             break;
+    //         case SYNC_ITEM_TYPES.move:
+    //             moveArr.push(item.moveInfo);
+    //             break;
+    //         case SYNC_ITEM_TYPES.reorder:
+    //             reorderArr.push(item.reorderInfo);
+    //             break;
+    //     }
+    // }
     // todo
-    async.parallel({
-        createItems: function(lineFinish) {
-            // todo query all parentIds
-            dao_marks.createUserMarks(userId, createArr, function() {
-                lineFinish(null, null);
-            });
-        },
-        removeItems: function() {
-            // todo
-        },
-        updateItems: function() {
-            // todo
-        },
-        updateVersion: function() {
-            // todo
-        }
-    }, function(err, results) {
-        if (err.length > 0) {
-            utils.error2json(res, err);
-            return;
-        }
-        // todo
-        var newVersion = results.updateVersion;
-        utils.result2json(res, newVersion);
-    });
+    // async.parallel({
+    //     createItems: function(lineFinish) {
+    //         // todo query all parentIds
+            
+    //         dao_marks.createUserMarks(userId, createArr, function() {
+    //             lineFinish(null, null);
+    //         });
+    //     },
+    //     removeItems: function() {
+    //         // todo
+    //     },
+    //     updateItems: function() {
+    //         // todo
+    //     },
+    //     updateVersion: function() {
+    //         // todo
+    //     }
+    // }, function(err, results) {
+    //     if (err.length > 0) {
+    //         utils.error2json(res, err);
+    //         return;
+    //     }
+    //     // todo
+    //     var newVersion = results.updateVersion;
+    //     utils.result2json(res, newVersion);
+    // });
+    //todo
 
 });
 
