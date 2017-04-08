@@ -70,7 +70,7 @@ CREATE TABLE `usermarks` (
 
 LOCK TABLES `usermarks` WRITE;
 /*!40000 ALTER TABLE `usermarks` DISABLE KEYS */;
-INSERT INTO `usermarks` VALUES (1,1,0,24,NULL,NULL);
+INSERT INTO `usermarks` VALUES (1,1,0,1,NULL,NULL);
 /*!40000 ALTER TABLE `usermarks` ENABLE KEYS */;
 UNLOCK TABLES;
 
