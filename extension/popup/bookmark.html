@@ -8,20 +8,16 @@
 </head>
 
 <body>
-    <div class="main">
-        <button id="btn-create">创建书签</button>
-        <button id="btn-remove">删除书签</button>
-        <button id="btn-getAll">获取书签</button>
+    <div id="main">
+        <button id="btn btn-sync">同步书签</button>
+        <div class="other">
+            <button class="close"> 知道了</button>
+            <button class="changeName"> 切换账号</button>
+        </div>
+    </div>
 
-        <h3>同步完成！</h3>
-        本次同步共增加书签1个，删除书签1个。<a href="#">查看详情</a>
-    </div>
-    <div class="other">
-        <button class="close"> 知道了</button>
-        <button class="changeName"> 切换账号</button>
-    </div>
-    <div class="login" style="display:none">
-        想体验在不同浏览器同步书签，请<a href="127.0.0.1/bookmark/login.html">登录或注册</a>
+    <div id="login" style="display:none">
+        <a href="127.0.0.1/bookmark/login.html">登录或注册</a>
     </div>
     <script src="bookmark.js"></script>
 </body>

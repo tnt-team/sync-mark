@@ -1,10 +1,10 @@
 var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
 var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
 var SYNC_INIT_DELAY = 0.1;
-var SYNC_DOWN_DELAY = 0.5;
+var SYNC_DOWN_DELAY = 10;
 var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
-localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
+localStorage.setItem(SYNC_USER_NAME_ID, 0); //模拟用户登录
 set2Storage({ SYNC_MARK_VERSION: 1 }, function() {});
 
 // 定时任务： 首次初始化书签
