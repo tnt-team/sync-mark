@@ -1,35 +1,58 @@
+-- MySQL dump 10.13  Distrib 5.7.16, for osx10.11 (x86_64)
+--
+-- Host: localhost    Database: syncmarks
+-- ------------------------------------------------------
+-- Server version	5.7.16
 
-SET NAMES utf8;
-SET FOREIGN_KEY_CHECKS = 0;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- -----------------------------------------------------
--- Schema syncmarks
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `syncmarks` DEFAULT CHARACTER SET utf8 ;
-USE `syncmarks` ;
+--
+-- Table structure for table `bookmark`
+--
 
--- ----------------------------
---  Table structure for `bookmark`
--- ----------------------------
 DROP TABLE IF EXISTS `bookmark`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `bookmark` (
-  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `markid` varchar(30) NOT NULL COMMENT '书签id',
-  `title` varchar(200) CHARACTER SET utf8 NOT NULL COMMENT '书签名',
-  `index` tinyint(4) NOT NULL COMMENT '排序',
-  `type` tinyint(1) NOT NULL COMMENT '类型，0为文件夹，1为书签',
-  `parentId` bigint(11) unsigned DEFAULT NULL COMMENT '父id，为0表示顶级书签',
-  `userid` bigint(11) unsigned DEFAULT '0' COMMENT '用户id',
+  `id` char(36) NOT NULL COMMENT '主键',
+  `fx_markid` varchar(30) CHARACTER SET latin1 DEFAULT NULL COMMENT '火狐书签id',
+  `fx_markparentid` varchar(30) CHARACTER SET latin1 DEFAULT NULL COMMENT '火狐书签id的父id',
+  `title` varchar(200) NOT NULL COMMENT '书签名',
+  `index` tinyint(4) DEFAULT NULL COMMENT '排序',
+  `type` tinyint(1) DEFAULT NULL COMMENT '类型，0为文件夹，1为书签',
+  `parentId` char(36) DEFAULT NULL COMMENT '父id，为0表示顶级书签',
+  `userid` bigint(11) unsigned NOT NULL DEFAULT '0' COMMENT '用户id',
   `dataAdded` bigint(20) DEFAULT NULL COMMENT '添加日期',
-  `markparentid` varchar(30) DEFAULT NULL COMMENT '书签id的父id',
-  `url` varchar(200) DEFAULT NULL COMMENT '书签链接',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+  `url` varchar(200) CHARACTER SET latin1 DEFAULT NULL COMMENT '书签链接',
+  `cr_markid` varchar(30) DEFAULT NULL COMMENT '谷歌书签id',
+  `cr_markparentid` varchar(30) DEFAULT NULL COMMENT '谷歌书签父id',
+  PRIMARY KEY (`id`),
+  KEY `userid_index` (`userid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------
---  Table structure for `usermarks`
--- ----------------------------
+--
+-- Dumping data for table `bookmark`
+--
+
+
+
+--
+-- Table structure for table `usermarks`
+--
+
 DROP TABLE IF EXISTS `usermarks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `usermarks` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT,
   `userid` bigint(11) unsigned NOT NULL COMMENT '用户id',
@@ -38,18 +61,54 @@ CREATE TABLE `usermarks` (
   `addtime` timestamp NULL DEFAULT NULL COMMENT '添加时间',
   `updatetime` timestamp NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ----------------------------
---  Table structure for `users`
--- ----------------------------
+--
+-- Dumping data for table `usermarks`
+--
+
+LOCK TABLES `usermarks` WRITE;
+/*!40000 ALTER TABLE `usermarks` DISABLE KEYS */;
+INSERT INTO `usermarks` VALUES (1,1,0,24,NULL,NULL);
+/*!40000 ALTER TABLE `usermarks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
 DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `username` varchar(20) DEFAULT NULL COMMENT '用户名',
-  `password` varchar(45) DEFAULT NULL COMMENT '密码',
+  `username` varchar(20) CHARACTER SET latin1 DEFAULT NULL COMMENT '用户名',
+  `password` varchar(45) CHARACTER SET latin1 DEFAULT NULL COMMENT '密码',
   `registertime` timestamp(6) NULL DEFAULT NULL COMMENT '注册时间',
-  `email` varchar(45) NOT NULL COMMENT '邮箱',
+  `email` varchar(45) CHARACTER SET latin1 NOT NULL COMMENT '邮箱',
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `email_UNIQUE` (`email` ASC)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `email_UNIQUE` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'wthfeng','123456','2017-01-20 16:00:00.000000','wthfeng@126.com');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2017-04-08 16:30:42
