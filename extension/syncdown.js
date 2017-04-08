@@ -1,25 +1,47 @@
 var SYNC_USER_NAME_ID = 'SYNC_USER_NAME_ID';
 var SYNC_MARK_VERSION = 'SYNC_MARK_VERSION';
+var SYNC_MARK_INIT = 'SYNC_MARK_INIT';
 var SYNC_INIT_DELAY = 0.1;
-var SYNC_DOWN_DELAY = 10;
+var SYNC_DOWN_DELAY = 1;
 var REMOTE_HOST = syncmark.remoteHost; //测试服务器地址
 
 
+set2Storage(SYNC_USER_NAME_ID, 1); //模拟用户登录
+localStorage.setItem(SYNC_USER_NAME_ID, 1);
 
-localStorage.setItem(SYNC_USER_NAME_ID, 1); //模拟用户登录
-//todo initinal set 1
-set2Storage(SYNC_MARK_VERSION, 1);
+set2Storage(SYNC_MARK_VERSION, 1); //模拟版本号
 
 // 定时任务： 首次初始化书签
-// browser.alarms.create('init_marks', {
-//     delayInMinutes: SYNC_INIT_DELAY
-// });
+browser.alarms.create('init_marks', {
+    delayInMinutes: SYNC_INIT_DELAY
+});
 
-// browser.alarms.onAlarm.addListener(function(alarm) {
-//     if (alarm.name != 'init_marks') {
-//         return;
-//     }
-// });
+//测试用 TODO 添加登录注册后去掉
+browser.alarms.onAlarm.addListener(function(alarm) {
+    if (alarm.name != 'init_marks') {
+        return;
+    }
+    getFromStorage(SYNC_MARK_VERSION, function(err, data) {
+        if (err) {
+            console.error('获取本地版本号失败')
+            return;
+        }
+        var localVersion = data[SYNC_MARK_VERSION];
+        console.log('localversion:' + JSON.stringify(localVersion));
+        var userid = localStorage.getItem(SYNC_USER_NAME_ID);
+        console.log('userid:' + userid);
+        getVersion(userid, function(err, remoteVersion) { //获取版本号
+            if (err) {
+                console.error('获取远程版本号失败');
+                return;
+            }
+            if (remoteVersion < localVersion) { //远程比本地版本小或相等
+                initMarks();
+            }
+        });
+
+    });
+});
 
 //定时任务：定时同步书签数据
 browser.alarms.create('sync', {
@@ -67,14 +89,17 @@ browser.alarms.onAlarm.addListener(function(alarm) {
                             console.log('获取本地书签错误');
                             return;
                         }
-                        console.log('同步开始：');
-                        updateLocalMarks(localMarks, remoteMrks, function(err) {
-                            if (err) {
-                                console.log('同步失败');
-                            }
-                            let obj = { SYNC_MARK_VERSION: remoteVersion };
-                            set2Storage(obj, function() {});
-                        });
+                        if (bookmarkLock.tryLock()) { //同步前加锁
+                            console.log('同步开始：');
+                            updateLocalMarks(localMarks, remoteMrks, function(err) {
+                                if (err) {
+                                    console.log('同步失败');
+                                }
+                                let obj = { SYNC_MARK_VERSION: remoteVersion };
+                                set2Storage(obj, function() {});
+                            });
+                            bookmarkLock.releaseLock(); //释放锁
+                        }
                     });
                 });
             }
@@ -102,7 +127,7 @@ function initMarks() {
         var marksArr = parseMarks2Array(items);
         batchUpdateMarks(userid, marksArr, function(err) {
             if (err) {
-                console.error('向服务器初始化书签错误');
+                console.error('向服务器初始化书签错误' + err);
                 return;
             }
             console.log('初始化成功');

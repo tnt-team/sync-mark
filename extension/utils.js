@@ -85,7 +85,7 @@ function getByIdOrArray(ids, callback) {
  * @param {*回调} callback 
  */
 function set2Storage(key, value) {
-    let setting = browser.storage.local.set({key, value});
+    let setting = browser.storage.local.set({ key, value });
     setting.then(null, function(err) {
         console.error('set2Storage error, key: ' + key + ', value: ' + value);
     });
@@ -244,8 +244,18 @@ var bookmarkLock = (function() {
         return lockState;
     }
 
+    function releaseLock() {
+        if (!lockState) {
+            return true;
+        }
+        lockState = false;
+        return true;
+
+    }
+
     return {
         tryLock: tryLock,
-        isLocked: isLocked
+        isLocked: isLocked,
+        releaseLock: releaseLock
     }
 })();

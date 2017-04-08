@@ -68,9 +68,9 @@ function addMarksBatch(userid, marksArr, browser_type, callback) {
 function useInsertSQLByBrowser(browser) {
     var sql = '';
     if (browser == 'Chrome') {
-        sql = 'insert into bookmark(id,parentid,userid,cr_markid,cr_markparentid,title,index,type,url) values ';
+        sql = 'insert into bookmark(id,parentid,userid,cr_markid,cr_markparentid,title,`index`,`type`,url) values ';
     } else {
-        sql = 'insert into bookmark(id,parentid,userid,fx_markid,fx_markparentid,title,index,type,url) values ';
+        sql = 'insert into bookmark(id,parentid,userid,fx_markid,fx_markparentid,title,`index`,`type`,url) values ';
     }
     return sql;
 }
@@ -78,9 +78,9 @@ function useInsertSQLByBrowser(browser) {
 function useSelectSQLByBroswer(broswer) {
     var sql = '';
     if (broswer == 'Chrome') {
-        sql = 'select cr_markid as markid,cr_markparentid as markparentid,id as _id,parentid as _pid,userid,title,index,type,url from bookmark where userid = ?';
+        sql = 'select cr_markid as markid,cr_markparentid as markparentid,id as _id,parentid as _pid,userid,title,`index`,`type`,url from bookmark where userid = ?';
     } else {
-        sql = 'select fx_markid as markid,fx_markparentid as markparentid,id as _id,parentid as _pid,userid,title,index,type,url from bookmark where userid = ?';
+        sql = 'select fx_markid as markid,fx_markparentid as markparentid,id as _id,parentid as _pid,userid,title,`index`,`type`,url from bookmark where userid = ?';
     }
     return sql;
 }
