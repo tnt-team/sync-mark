@@ -26,8 +26,8 @@ function addMarksBatch(userid, marksArr, browser_type, callback) {
     var dataSQL = [],
         insertSQL = '',
         num = marksArr.length;
-    for (let i = 0; i < num; i++) {
-        let arr = [];
+    for (var i = 0; i < num; i++) {
+        var arr = [];
         //数据库id、pid
         arr.push(marksArr[i]._id);
         arr.push(marksArr[i]._pid);

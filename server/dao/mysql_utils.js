@@ -1,10 +1,10 @@
 var mysql = require('mysql');
 var async = require('async');
 var pool = mysql.createPool({
-    host: 'localhost',
-    user: 'marks',
-    password: 'marks',
-    database: 'syncmarks'
+    host: 'sqld.duapp.com',
+    user: 'username',
+    password: 'password',
+    database: 'syncmark'
 });
 
 // pool.end(function(err) {
@@ -63,8 +63,8 @@ function execSQL4Trans(sqls, callback) {
                 }
                 var tasks = [];
                 sqls.forEach(function(sqlParam) {
-                    let sql = sqlParam.sql;
-                    let params = sqlParam.params;
+                    var sql = sqlParam.sql;
+                    var params = sqlParam.params;
                     var temp = function(cb) {
                         conn.query(sql, params, function(err, rows) {
                             if (err) {
