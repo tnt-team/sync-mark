@@ -99,6 +99,7 @@ function set2Storage(key, value) {
 function getFromStorage(key, callback) {
     let setting = browser.storage.local.get(key);
     setting.then(function(data) {
+        console.log('getFromStorage:' + JSON.stringify(data));
         callback(null, data);
     }, function(err) {
         console.error('getFromStorage error, key: ' + key);

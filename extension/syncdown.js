@@ -75,28 +75,32 @@ browser.alarms.onAlarm.addListener(function(alarm) {
             if (remoteVersion <= localVersion) { //远程比本地版本小或相等
                 console.log('不需同步');
                 if (remoteVersion != localVersion) {
-                    let obj = { version: remoteVersion };
-                    set2Storage(obj, function() {});
+                    set2Storage(SYNC_MARK_VERSION, remoteVersion);
                 }
+                getFromStorage(SYNC_MARK_VERSION, function(err, data) {
+                    console.log(data.SYNC_MARK_VERSION);
+                });
             }
             if (remoteVersion > localVersion) { //服务器的版本较新
                 downAllData(userid, function(err, remoteMrks) { //获取服务器书签数据
                     if (err) {
-                        console.error('获取服务器书签数据失败');
+                        console.error('获取服务器书签数据失败' + err);
                     }
                     getAllMarks(function(err, localMarks) { //获取浏览器书签
                         if (err) {
-                            console.log('获取本地书签错误');
+                            console.error('获取本地书签错误' + err);
                             return;
                         }
                         if (bookmarkLock.tryLock()) { //同步前加锁
                             console.log('同步开始：');
                             updateLocalMarks(localMarks, remoteMrks, function(err) {
                                 if (err) {
-                                    console.log('同步失败');
+                                    console.error('同步失败' + err);
                                 }
-                                let obj = { SYNC_MARK_VERSION: remoteVersion };
-                                set2Storage(obj, function() {});
+                                set2Storage(SYNC_MARK_VERSION, remoteVersion);
+                                getFromStorage(SYNC_MARK_VERSION, function(err, data) {
+                                    console.log(data.SYNC_MARK_VERSION);
+                                });
                             });
                             bookmarkLock.releaseLock(); //释放锁
                         }
@@ -131,6 +135,7 @@ function initMarks() {
                 return;
             }
             console.log('初始化成功');
+
         });
     });
 }
@@ -202,13 +207,8 @@ function batchUpdateMarks(userid, marksArr, callback) {
                 return callback(data.error);
             }
             //设置版本号
-            let version = { version: data.result[0].version };
-            set2Storage(version, function(err) {
-                if (err) {
-                    return callback(err, null);
-                }
-                callback(null);
-            });
+            set2Storage(SYNC_MARK_VERSION, data.result[0].version);
+            callback(null);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             callback(textStatus);
