@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>书签同步 - 注册</title>
+</head>
+<body>
+  <div class="register">
+      <label>邮箱：</label>
+      <input type="text"  />  
+      <button type="" id="sendCode">发送邮箱验证码</button>
+      <br/>
+       <label>密码：</label>
+      <input type="password" />
+        <label>确认密码：</label>
+      <input type="password" />  <br/>
+        <label>邮箱验证码：</label>
+      <input type="text" />
+      <br/>
+       <button id="submit">注册</button>
+       <button id="login">已有账号，登录</button>
+      
+   </div>  
+   <script src="js/jquery.min.js"></script>
+   <script>
+     $("#sendCode").on('click',function(){
+        $.ajax({
+          url:'/mail/sendEmail',
+          type:'post',
+          success:function(data){
+            console.log(data);
+          }
+
+        });
+
+
+
+
+     });
+ 
+
+
+  </script>
+</body>
+</html>
