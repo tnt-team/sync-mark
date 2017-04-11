@@ -9,7 +9,7 @@
 <body>
   <div class="register">
       <label>邮箱：</label>
-      <input type="text"  />  
+      <input type="email" id="email-address" />  
       <button type="" id="sendCode">发送邮箱验证码</button>
       <br/>
        <label>密码：</label>
@@ -26,18 +26,22 @@
    <script src="js/jquery.min.js"></script>
    <script>
      $("#sendCode").on('click',function(){
+       var address = $('#email-address').val();
         $.ajax({
-          url:'/mail/sendEmail',
+          url:'/mail/sendCode',
           type:'post',
+          data:{address:address},
           success:function(data){
-            console.log(data);
+            if(data==0){
+              alert('验证码发送成功');
+            }else{
+               alert('验证码发送失败'+data);
+            }
+          },
+          error:function(err){
+            alert('验证码发送失败'+err);
           }
-
         });
-
-
-
-
      });
  
 
