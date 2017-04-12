@@ -28,8 +28,12 @@ router.post('/register', function(req, res) {
             return utils.error2json(res, err);
         }
         if (data.code == code) {
-            dao_users.register(email, password, function() {
-
+            var crypwd = utils.encryptSHA1(password);
+            dao_users.register(email, crypwd, function(err, data) {
+                if (err) {
+                    return utils.error2json(res, err);
+                }
+                utils.result2json(res, data);
             });
         } else {
             utils.error2json(res, '验证码有误！');

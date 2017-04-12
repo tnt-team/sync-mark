@@ -38,14 +38,14 @@ function getMailCode(email, callback) {
 /**
  * 用户注册
  * @param {*注册邮箱} email 
- * @param {*密码} password 
+ * @param {*加密密码} password 
  * @param {*回调} callback 
  */
 function register(email, password, callback) {
-
-
-
-
+    var date = new Date();
+    var sql = 'insert into users(email,password,registertime) values(?,?,?)';
+    var param = [email, password, date];
+    dao.execSQL(sql, param, callback);
 }
 
 module.exports = {

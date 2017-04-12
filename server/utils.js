@@ -1,4 +1,5 @@
 var nodemailer = require('nodemailer');
+var crypto = require('crypto');
 
 function result2json(res, result) {
     packRes(res);
@@ -53,9 +54,16 @@ function getRandom(num) {
     return str;
 
 }
+
+function encryptSHA1(value) {
+    var sha1 = crypto.createHash('sha1');
+    sha1.update(value);
+    return sha1.digest('hex');
+}
 module.exports = {
     result2json,
     error2json,
     sendMail,
-    getRandom
+    getRandom,
+    encryptSHA1
 }
