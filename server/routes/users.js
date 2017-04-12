@@ -10,13 +10,30 @@ router.get('/', function(req, res, next) {
 
 router.get('/getVersion', function(req, res) {
     var userid = req.query.userid;
-
     dao_users.getVersion(userid, function(err, data) {
         if (err) {
-            utils.error2json(res, err);
+            return utils.error2json(res, err);
         }
         console.log('getVersion:' + JSON.stringify(data));
         utils.result2json(res, data);
+    });
+});
+
+router.post('/register', function(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+    var code = req.body.code;
+    dao_users.getMailCode(email, function(err, data) {
+        if (err) {
+            return utils.error2json(res, err);
+        }
+        if (data.code == code) {
+            dao_users.register(email, password, function() {
+
+            });
+        } else {
+            utils.error2json(res, '验证码有误！');
+        }
     });
 });
 

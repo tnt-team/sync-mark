@@ -13,10 +13,11 @@ router.post('/sendCode', function(req, res, next) {
     var text = '你的验证码是' + code + ',请不要将此验证码泄露给它人';
     util.sendMail(address, constant.MAIL_RELATED.MAIL_AUTH_SUBJECT, text, function(err, info) {
         if (err) {
-            return res.send('验证码发送失败' + err);
+            console.log('发送邮件有误');
         }
-        res.send(0);
-    })
+        console.log('邮件发送成功！');
+    });
+    res.json({ 'code': 0, 'data': '邮件已发送，请注意查收' });
 });
 
 module.exports = router;

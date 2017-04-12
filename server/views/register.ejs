@@ -32,8 +32,8 @@
           type:'post',
           data:{address:address},
           success:function(data){
-            if(data==0){
-              alert('验证码发送成功');
+            if(data.code==0){
+              alert(data.data);
             }else{
                alert('验证码发送失败'+data);
             }
