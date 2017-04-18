@@ -22,7 +22,7 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('tnt-syncmark')); //cookie使用签名
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);

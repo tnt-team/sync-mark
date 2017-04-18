@@ -55,6 +55,7 @@ function getRandom(num) {
 
 }
 
+
 function encryptSHA1(value) {
     var sha1 = crypto.createHash('sha1');
     sha1.update(value);

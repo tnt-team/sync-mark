@@ -41,4 +41,35 @@ router.post('/register', function(req, res) {
     });
 });
 
+router.post('/login', function(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+    console.log(req.signedCookies);
+    dao_users.login(email, function(err, data) {
+        if (err) {
+            return utils.error2json(res, err);
+        }
+        if (data.password) {
+            if (utils.encryptSHA1(password) == data.password) {
+
+            }
+        }
+    });
+});
+
+router.get('/test', function(req, res) {
+    var month = 3600 * 24 * 30 * 1000;
+    res.cookie('syncmarkid', 'baisha578', {
+        httpOnly: true,
+        maxAge: month,
+        signed: true
+    });
+    utils.result2json(res, 'cookie');
+});
+
+router.get('/test2', function(req, res) {
+
+
+});
+
 module.exports = router;

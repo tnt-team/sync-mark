@@ -48,9 +48,16 @@ function register(email, password, callback) {
     dao.execSQL(sql, param, callback);
 }
 
+function login(email, callback) {
+    var sql = 'select password from users where email = ?';
+    var params = [email];
+    dao.execSQL(sql, params, callback);
+}
+
 module.exports = {
     getVersion,
     saveMailCode,
     getMailCode,
-    register
+    register,
+    login
 }

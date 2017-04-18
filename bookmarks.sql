@@ -44,7 +44,36 @@ CREATE TABLE `bookmark` (
 -- Dumping data for table `bookmark`
 --
 
+LOCK TABLES `bookmark` WRITE;
+/*!40000 ALTER TABLE `bookmark` DISABLE KEYS */;
+INSERT INTO `bookmark` VALUES ('e58c5470-1c50-11e7-b9d1-dff1bf8415ec','root________','0','',0,0,'',1,NULL,'',NULL,NULL),('e58c7b80-1c50-11e7-b9d1-dff1bf8415ec','menu________','root________','书签菜单',0,1,'e58c5470-1c50-11e7-b9d1-dff1bf8415ec',1,NULL,'',NULL,NULL),('e58c7b81-1c50-11e7-b9d1-dff1bf8415ec','toolbar_____','root________','书签工具栏',1,1,'e58c5470-1c50-11e7-b9d1-dff1bf8415ec',1,NULL,'',NULL,NULL),('e58c7b82-1c50-11e7-b9d1-dff1bf8415ec','unfiled_____','root________','其他书签',3,1,'e58c5470-1c50-11e7-b9d1-dff1bf8415ec',1,NULL,'',NULL,NULL),('e58c7b83-1c50-11e7-b9d1-dff1bf8415ec','mobile______','root________','mobile',4,1,'e58c5470-1c50-11e7-b9d1-dff1bf8415ec',1,NULL,'',NULL,NULL);
+/*!40000 ALTER TABLE `bookmark` ENABLE KEYS */;
+UNLOCK TABLES;
 
+--
+-- Table structure for table `emailcode`
+--
+
+DROP TABLE IF EXISTS `emailcode`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `emailcode` (
+  `id` bigint(20) NOT NULL,
+  `email` varchar(50) COLLATE utf8_bin NOT NULL COMMENT '邮箱',
+  `code` char(6) COLLATE utf8_bin NOT NULL,
+  `createtime` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='用于保存邮箱验证码';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `emailcode`
+--
+
+LOCK TABLES `emailcode` WRITE;
+/*!40000 ALTER TABLE `emailcode` DISABLE KEYS */;
+/*!40000 ALTER TABLE `emailcode` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `usermarks`
@@ -85,7 +114,7 @@ CREATE TABLE `users` (
   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
   `username` varchar(20) CHARACTER SET latin1 DEFAULT NULL COMMENT '用户名',
   `password` varchar(45) CHARACTER SET latin1 DEFAULT NULL COMMENT '密码',
-  `registertime` timestamp(6) NULL DEFAULT NULL COMMENT '注册时间',
+  `registertime` datetime DEFAULT NULL COMMENT '注册时间',
   `email` varchar(45) CHARACTER SET latin1 NOT NULL COMMENT '邮箱',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_UNIQUE` (`email`)
@@ -98,7 +127,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'wthfeng','123456','2017-01-20 16:00:00.000000','wthfeng@126.com');
+INSERT INTO `users` VALUES (1,'wthfeng','123456','2017-01-21 00:00:00','wthfeng@126.com');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -111,4 +140,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-04-08 16:30:42
+-- Dump completed on 2017-04-12 11:01:08
