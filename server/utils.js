@@ -1,5 +1,6 @@
 var nodemailer = require('nodemailer');
 var crypto = require('crypto');
+var constant = require('./constant');
 
 function result2json(res, result) {
     packRes(res);
@@ -55,6 +56,27 @@ function getRandom(num) {
 
 }
 
+/**
+ * 将用户名设置到cookie
+ * @param {*} res 
+ * @param {*用户名} name 
+ */
+function setUser2Cookie(res, name) {
+    res.cookie(constant.COOKIE_RELATED.COOKIE_USER_ID, name, {
+        httpOnly: true,
+        maxAge: constant.COOKIE_RELATED.COOKIE_STORAGE_TIME,
+        signed: true
+    });
+}
+
+/**
+ * 从cookie中获取用户名，若无，返回null
+ * @param {*} req 
+ */
+function getUserFromCookie(req) {
+    var name = req.signedCookies[constant.COOKIE_RELATED.COOKIE_USER_ID];
+    return name;
+}
 
 function encryptSHA1(value) {
     var sha1 = crypto.createHash('sha1');
@@ -66,5 +88,7 @@ module.exports = {
     error2json,
     sendMail,
     getRandom,
-    encryptSHA1
+    encryptSHA1,
+    setUser2Cookie,
+    getUserFromCookie
 }

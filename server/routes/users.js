@@ -51,25 +51,13 @@ router.post('/login', function(req, res) {
         }
         if (data.password) {
             if (utils.encryptSHA1(password) == data.password) {
+                utils.setUser2Cookie(res, email); //设置用户到cookie
 
             }
+            // utils.result2json(res,)
         }
     });
 });
 
-router.get('/test', function(req, res) {
-    var month = 3600 * 24 * 30 * 1000;
-    res.cookie('syncmarkid', 'baisha578', {
-        httpOnly: true,
-        maxAge: month,
-        signed: true
-    });
-    utils.result2json(res, 'cookie');
-});
-
-router.get('/test2', function(req, res) {
-
-
-});
 
 module.exports = router;

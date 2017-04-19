@@ -17,8 +17,17 @@ var MAIL_RELATED = {
     MAIL_AUTH_SUBJECT
 }
 
+var COOKIE_USER_ID = 'syncmarkid';
+var COOKIE_STORAGE_TIME = 1000 * 3600 * 24 * 7 * 2; //两周
+
+var COOKIE_RELATED = {
+    COOKIE_USER_ID,
+    COOKIE_STORAGE_TIME
+}
+
 
 module.exports = {
     COMMON_SQL,
-    MAIL_RELATED
+    MAIL_RELATED,
+    COOKIE_RELATED
 }
