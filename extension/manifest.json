@@ -26,7 +26,8 @@
         "bookmarks", //书签
         "tabs", //页面
         "alarms", //定时任务
-        "storage" //存储
+        "storage", //存储,
+        "cookies"
         // "http://localhost:3000/*",
         // "webRequest"
     ],

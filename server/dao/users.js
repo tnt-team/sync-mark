@@ -17,7 +17,7 @@ function getVersion(userid, callback) {
  * @param {*回调} callback 
  */
 function saveMailCode(email, code, callback) {
-    var sql = 'insert into emailcode(email,code,createtime) VALUES(?,?,？)';
+    var sql = 'insert into emailcode(email,code,createtime) VALUES(?,?,?)';
     var date = new Date();
     var param = [email, code, date];
     dao.execSQL(sql, param, callback);

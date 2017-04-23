@@ -12,6 +12,11 @@ function error2json(res, err) {
     res.json({ "error": err });
 }
 
+function redirect(res, page) {
+    packRes(res);
+    res.redirect(page);
+}
+
 function packRes(res) {
     res.setHeader('Access-Control-Allow-origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST');
@@ -20,14 +25,14 @@ function packRes(res) {
 
 function sendMail(to, subject, text, callback) {
     var transporter = nodemailer.createTransport({
-        service: 'Gmail',
+        service: 'gmail',
         auth: {
             user: 'tonghe378@gmail.com',
             pass: 'wth19920121'
         }
     });
     var mailOptions = {
-        from: '书签同步工具', // sender address
+        from: 'tonghe378@gmail.com', // sender address
         to: to, // list of receivers
         subject: subject, // Subject line
         text: text, // plaintext body
@@ -46,10 +51,10 @@ function sendMail(to, subject, text, callback) {
  */
 function getRandom(num) {
     var chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-    var length = chars.length;
+    var length = chars.length - 1;
     var str = '';
     for (var i = 0; i < num; i++) {
-        var s = chars[Math.ceil(Math.random() * length)];
+        var s = chars[Math.floor(Math.random() * (length + 1))];
         str += s;
     }
     return str;
@@ -86,6 +91,7 @@ function encryptSHA1(value) {
 module.exports = {
     result2json,
     error2json,
+    redirect,
     sendMail,
     getRandom,
     encryptSHA1,

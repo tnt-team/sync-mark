@@ -8,17 +8,19 @@
 </head>
 
 <body>
-    <div id="main">
-        <button id="btn btn-sync">同步书签</button>
-        <div class="other">
-            <button class="close"> 知道了</button>
-            <button class="changeName"> 切换账号</button>
-        </div>
+    <div id="main" style="display:none">
+        <img src="../icons/syncmark-48.png" width="50" height="50" />
+        <span class="username">dunky378</span>
+        <button class="cancel">注销</button>
     </div>
 
-    <div id="login" style="display:none">
-        <a href="127.0.0.1/bookmark/login.html">登录或注册</a>
+    <div id="login-div">
+        <button id="login">登录</button></br>
+        <button id="register">注册</button>
     </div>
+
+    <script src="../jquery.min.js"></script>
+    <script src="../config.js"></script>
     <script src="bookmark.js"></script>
 </body>
 

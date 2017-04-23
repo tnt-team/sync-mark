@@ -27,13 +27,15 @@ router.post('/register', function(req, res) {
         if (err) {
             return utils.error2json(res, err);
         }
-        if (data.code == code) {
+        if (data[0].code == code) {
             var crypwd = utils.encryptSHA1(password);
             dao_users.register(email, crypwd, function(err, data) {
                 if (err) {
                     return utils.error2json(res, err);
                 }
-                utils.result2json(res, data);
+                utils.setUser2Cookie(res, email);
+                utils.redirect(res, 'info.ejs');
+
             });
         } else {
             utils.error2json(res, '验证码有误！');
@@ -52,10 +54,11 @@ router.post('/login', function(req, res) {
         if (data.password) {
             if (utils.encryptSHA1(password) == data.password) {
                 utils.setUser2Cookie(res, email); //设置用户到cookie
-
+                return utils.result2json(res, '登录成功');
             }
-            // utils.result2json(res,)
+            return utils.error2json(res, '密码错误');
         }
+        return utils.error2json(res, '用户名错误');
     });
 });
 

@@ -30,8 +30,7 @@ function execSQL(sql, params, callback) {
                 conn.release();
                 if (err) {
                     console.error('execSQL: exec sql error, ' + err.message || '' + ' ' + err.stack || '');
-                    callback(err, null);
-
+                    return callback(err, null);
                 }
                 callback(null, rows);
             });
@@ -81,7 +80,7 @@ function execSQL4Trans(sqls, callback) {
                             console.error('事务执行失败' + aerr.stack);
                             return callback(aerr, null);
                         });
-                        
+
                     }
                     conn.commit(function(err, info) {
                         if (err) {

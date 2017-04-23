@@ -9,9 +9,9 @@
 <body>
    <div class="login">
       <label>邮箱：</label>
-      <input type="text"  /><br/>
+      <input type="email"  id="email" /><br/>
        <label>密码：</label>
-      <input type="password"   /><br/>
+      <input type="password" id="pwd"  /><br/>
       <button id="submit">登录</button>
        <a id="register" href="register">注册</a>
       
@@ -19,6 +19,38 @@
 </body>
 <script src="js/jquery.min.js"></script>
 <script>
+   $(function(){
+       $('#submit').on('click',function(){
+           var email = $('#email').val();
+           var pwd = $('#pwd').val();
+           if(!email||!pwd){
+               alert('邮箱或密码必填');
+               return ;
+           }
+           $.ajax({
+               url:'/users/login',
+               type:'post',
+               data:{email:email,password:pwd},
+               success:function(data){
+                   if(data.error){
+                       console.log(data.error);
+                       alert('登录失败：');
+                   }else{
+                       console.log('登录成功');
+                       alert('登录成功！');
+
+                   }
+               },
+               error:function(err){
+                       alert('登录失败：');                   
+               }
+           });
+
+
+       });
+
+
+   });
  
 
 

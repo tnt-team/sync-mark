@@ -13,19 +13,22 @@
       <button type="" id="sendCode">发送邮箱验证码</button>
       <br/>
        <label>密码：</label>
-      <input type="password" />
+      <input type="password" id="pwd" />
         <label>确认密码：</label>
       <input type="password" />  <br/>
         <label>邮箱验证码：</label>
-      <input type="text" />
+      <input type="text"  id="mailcode"/>
       <br/>
        <button id="submit">注册</button>
-       <button id="login">已有账号，登录</button>
+       <a id="login" href="login" >已有账号，登录</a>
       
    </div>  
    <script src="js/jquery.min.js"></script>
    <script>
-     $("#sendCode").on('click',function(){
+
+   $(function(){
+
+      $("#sendCode").on('click',function(){
        var address = $('#email-address').val();
         $.ajax({
           url:'/mail/sendCode',
@@ -43,7 +46,32 @@
           }
         });
      });
+
+     $('#submit').on('click',function(){
+       var email = $('#email-address').val();
+       var pwd = $('#pwd').val();
+       var code = $("#mailcode").val();
+       if(!email||!pwd||!code){
+        return  alert('请正确填写！');
+       }
+       $.ajax({
+         url:'/users/register',
+         type:'post',
+         data:{email:email,password:pwd,code:code},
+         success:function(data){
+
+         },
+         error:function(){
+
+         }
+       })
+
+
+     });
  
+
+   })
+    
 
 
   </script>
